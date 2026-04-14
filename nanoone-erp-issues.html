@@ -633,6 +633,72 @@
   .section-pane { display: none; }
   .section-pane.active { display: block; }
 
+  /* ── Animated horizontal timeline ── */
+  .htl-wrap {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 24px 20px;
+    margin-bottom: 28px;
+    overflow: visible;
+  }
+  .htl-today-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:8px; }
+  .htl-today-label { font-size:12px; font-family:'DM Mono',monospace; color:var(--nano-teal-light); letter-spacing:0.08em; text-transform:uppercase; }
+  .htl-today-date  { font-size:12px; font-family:'DM Mono',monospace; color:var(--text-muted); }
+  .htl-track-outer { position:relative; height:6px; background:var(--border-mid); border-radius:3px; margin-bottom:56px; margin-top:56px; }
+  .htl-track-fill  { height:6px; border-radius:3px; background:linear-gradient(90deg,#8abf56 0%,#22b09e 55%,#d4903a 80%,#e05252 100%); width:0; transition:width 1.2s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes pulse-pin { 0%,100%{ box-shadow:0 0 0 3px rgba(34,176,158,0.3); } 50%{ box-shadow:0 0 0 7px rgba(34,176,158,0.1); } }
+  .htl-today-pin {
+    position:absolute; top:50%; transform:translate(-50%,-50%);
+    width:14px; height:14px; border-radius:50%;
+    background:var(--nano-teal-light); border:2px solid var(--card-bg);
+    z-index:3; transition:left 1.2s cubic-bezier(0.4,0,0.2,1);
+    animation:pulse-pin 2s ease-in-out infinite;
+  }
+  .htl-today-flag {
+    position:absolute; bottom:calc(100% + 10px); transform:translateX(-50%);
+    font-size:10px; font-family:'DM Mono',monospace; color:var(--nano-teal-light);
+    white-space:nowrap; letter-spacing:0.06em; font-weight:500;
+    transition:left 1.2s cubic-bezier(0.4,0,0.2,1);
+  }
+  .htl-ms {
+    position:absolute; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; cursor:default;
+  }
+  .htl-ms.above { bottom:calc(100% + 6px); flex-direction:column-reverse; }
+  .htl-ms.below { top:calc(100% + 6px); }
+  .htl-ms-dot {
+    width:10px; height:10px; border-radius:50%;
+    background:var(--card-bg); border:2px solid var(--border-mid);
+    flex-shrink:0; transition:transform 0.15s;
+  }
+  .htl-ms.done .htl-ms-dot { background:#8abf56; border-color:#8abf56; }
+  .htl-ms.live .htl-ms-dot { background:var(--nano-teal-light); border-color:var(--nano-teal-light); animation:pulse-pin 2s ease-in-out infinite; }
+  .htl-ms.risk .htl-ms-dot { background:var(--amber); border-color:var(--amber); }
+  .htl-ms.crit .htl-ms-dot { background:var(--red); border-color:var(--red); }
+  .htl-ms:hover .htl-ms-dot { transform:scale(1.5); }
+  .htl-ms-label {
+    font-size:10px; font-family:'DM Mono',monospace; color:var(--text-muted);
+    white-space:nowrap; text-align:center; pointer-events:none; letter-spacing:0.02em;
+    padding:3px 0;
+  }
+  .htl-ms-stem {
+    width:1px; height:20px; background:var(--border-mid); flex-shrink:0;
+  }
+  .htl-tooltip {
+    display:none; position:absolute; bottom:calc(100% + 14px); left:50%; transform:translateX(-50%);
+    background:var(--nano-navy-light); border:1px solid var(--border-mid); border-radius:8px;
+    padding:10px 14px; width:210px; z-index:20; pointer-events:none;
+  }
+  .htl-ms.below .htl-tooltip { bottom:auto; top:calc(100% + 14px); }
+  .htl-ms:hover .htl-tooltip { display:block; }
+  .htl-tooltip-title { font-size:12px; font-weight:500; color:var(--text-primary); margin-bottom:3px; }
+  .htl-tooltip-date  { font-size:11px; font-family:'DM Mono',monospace; color:var(--text-muted); margin-bottom:5px; }
+  .htl-tooltip-note  { font-size:11px; color:var(--text-secondary); line-height:1.55; }
+  .htl-legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; }
+  .htl-leg-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; }
+  .htl-leg-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
   /* ── Readiness section ── */
   .readiness-eyebrow {
     font-size: 11px;
@@ -814,6 +880,10 @@
 <!-- Main -->
 <main>
 
+  <!-- Always-visible timeline -->
+  <div class="timeline-title" style="margin-bottom:8px;">Project timeline — where we are today</div>
+  <div id="animated-timeline"></div>
+
   <!-- Section Tabs -->
   <div class="section-tabs">
     <button class="section-tab active" onclick="switchTab('issues',this)">
@@ -874,7 +944,7 @@
     <div class="readiness-eyebrow">Source: Nano One Go Live System Readiness Assessment.xlsx &amp; Go Live Schedule.xlsx — assessed March 31, schedule updated April 6</div>
 
     <!-- Module scores -->
-    <div class="timeline-title">Readiness assessment scores</div>
+    <div class="timeline-title" style="margin-top:8px;">Readiness assessment scores</div>
     <div class="readiness-grid">
       <div class="readiness-card green">
         <div class="readiness-module">System</div>
@@ -911,73 +981,6 @@
         <div class="readiness-score amber">85.90%</div>
         <div class="readiness-bar-wrap"><div class="readiness-bar amber" style="width:85.9%"></div></div>
         <div class="readiness-band">Minor follow-up needed</div>
-      </div>
-    </div>
-
-    <!-- Timeline -->
-    <div class="timeline-title" style="margin-top:8px;">Cutover timeline</div>
-    <div class="timeline-wrap">
-      <div class="timeline">
-        <div class="tl-item done">
-          <div class="tl-date">March 9</div>
-          <div class="tl-label">Cutover window opens</div>
-          <div class="tl-note">28-day window begins. PRD environment confirmed available.</div>
-        </div>
-        <div class="tl-item done">
-          <div class="tl-date">March 11–20</div>
-          <div class="tl-label">Parameters &amp; supporting tables</div>
-          <div class="tl-note">GL, AP, AR, Fixed Assets, Projects codes — all loaded to PRD. 100% complete.</div>
-        </div>
-        <div class="tl-item done">
-          <div class="tl-date">March 23–25</div>
-          <div class="tl-label">Static data load</div>
-          <div class="tl-note">Non-inventory items, Fixed Assets, Vendors validated and signed off. Quickbooks backed up.</div>
-        </div>
-        <div class="tl-item done">
-          <div class="tl-date">March 31</div>
-          <div class="tl-label">System Readiness Assessment scored</div>
-          <div class="tl-note">Overall 82.14%. Projects flagged as not feasible for April 1 date by Ian.</div>
-        </div>
-        <div class="tl-item done">
-          <div class="tl-date">March 31</div>
-          <div class="tl-label">Activities cutoff — Quickbooks locked</div>
-          <div class="tl-note">All activities to end of March 31 completed in legacy system. 100%.</div>
-        </div>
-        <div class="tl-item done">
-          <div class="tl-date">April 1</div>
-          <div class="tl-label">Go / No-Go decision</div>
-          <div class="tl-note">Final sign-off made. Projects module deferred. Financial modules approved to proceed.</div>
-        </div>
-        <div class="tl-item done">
-          <div class="tl-date">April 1–3</div>
-          <div class="tl-label">Dynamic data load — Purchasing &amp; AP</div>
-          <div class="tl-note">Purchasing at 90%. 5 POs remain in Candiac. Change order reports still outstanding to PRD.</div>
-        </div>
-        <div class="tl-item done">
-          <div class="tl-date">April 3</div>
-          <div class="tl-label">General Ledger opening balances</div>
-          <div class="tl-note">GL upload 100%. Balance for March 31. Trial Balance reconciled to legacy.</div>
-        </div>
-        <div class="tl-item active">
-          <div class="tl-date">April 8</div>
-          <div class="tl-label">Live operations begin</div>
-          <div class="tl-note">Quickbooks locked to read-only. Post month-end entries into SyteLine.</div>
-        </div>
-        <div class="tl-item risk">
-          <div class="tl-date">April 8 – May 1</div>
-          <div class="tl-label">Projects / WIP subledger load</div>
-          <div class="tl-note">0% complete. 29-day task. Open projects, tasks, resources and WIP balances. Owner: Ian / Wei.</div>
-        </div>
-        <div class="tl-item risk">
-          <div class="tl-date">April 27 – May 8</div>
-          <div class="tl-label">First financial month-end close</div>
-          <div class="tl-note">0% started. First close in SyteLine. Owner: Monica.</div>
-        </div>
-        <div class="tl-item miss">
-          <div class="tl-date">April 6 – April 30</div>
-          <div class="tl-label">Post go-live activities</div>
-          <div class="tl-note">Post-implementation audit (Reza), open issue resolution (Nano One/ESS), end-user efficiency measurement, data integrity verification — all 0%.</div>
-        </div>
       </div>
     </div>
 
@@ -1331,13 +1334,6 @@ function setAssigneeFilter(val, btn) {
   renderList();
 }
 
-function switchTab(name, btn) {
-  document.querySelectorAll('.section-tab').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.section-pane').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('pane-' + name).classList.add('active');
-}
-
 function updateTabCount() {
   const el = document.getElementById('tab-issues-count');
   if (el) el.textContent = issues.length;
@@ -1567,6 +1563,86 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function buildTimeline() {
+  const el = document.getElementById('animated-timeline');
+  if (!el) return;
+
+  const MS = [
+    { date: new Date(2026,2,9),  label: 'Cutover opens',     status: 'done', title: 'Cutover window opens',               note: '28-day window begins. PRD environment confirmed available.' },
+    { date: new Date(2026,2,20), label: 'Params loaded',     status: 'done', title: 'Parameters & supporting tables',      note: 'GL, AP, AR, Fixed Assets, Project codes loaded to PRD. 100%.' },
+    { date: new Date(2026,2,25), label: 'Static data',       status: 'done', title: 'Static data load',                   note: 'Non-inventory items, Fixed Assets, Vendors validated and signed off.' },
+    { date: new Date(2026,2,31), label: 'Readiness + cutoff',status: 'done', title: 'Readiness assessed & QB locked',     note: 'Overall 82.14%. Projects flagged not feasible. Quickbooks activities locked at March 31.' },
+    { date: new Date(2026,3,1),  label: 'Go / No-Go',       status: 'done', title: 'Go / No-Go decision',                note: 'Sign-off made. Projects deferred. Financials approved to proceed.' },
+    { date: new Date(2026,3,3),  label: 'Data loads',        status: 'done', title: 'Dynamic data load + GL balances',    note: 'Purchasing at 90%. GL opening balances 100%. Trial Balance reconciled.' },
+    { date: new Date(2026,3,8),  label: 'GO-LIVE',           status: 'live', title: 'Live operations begin',              note: 'Quickbooks locked read-only. SyteLine is the system of record.' },
+    { date: new Date(2026,3,14), label: 'TODAY',             status: 'live', title: 'Today — April 14',                  note: 'Day 6 post go-live. Projects/WIP and Inventory setup still at 0%.' },
+    { date: new Date(2026,3,30), label: 'Post go-live due',  status: 'crit', title: 'Post go-live activities due',        note: 'Audit, issue resolution, efficiency measurement — all at 0%.' },
+    { date: new Date(2026,4,1),  label: 'WIP deadline',      status: 'risk', title: 'Projects / WIP subledger due',       note: '0% complete. 29-day task started April 2. Owner: Ian / Wei.' },
+    { date: new Date(2026,4,8),  label: 'Month-end close',   status: 'risk', title: 'First financial month-end close',    note: '0% started. First close in SyteLine. Owner: Monica.' },
+  ];
+
+  const today = new Date(2026,3,14);
+  const start = new Date(2026,2,1);
+  const end   = new Date(2026,4,15);
+  const span  = end - start;
+  const todayPct = Math.min(100, Math.max(0, ((today - start) / span) * 100));
+  const dateStr = today.toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
+
+  el.innerHTML = `
+    <div class="htl-wrap">
+      <div class="htl-today-bar">
+        <span class="htl-today-label">Timeline — March 2026 to May 2026</span>
+        <span class="htl-today-date">Today: ${dateStr}</span>
+      </div>
+      <div class="htl-track-outer" id="htl-track">
+        <div class="htl-track-fill" id="htl-fill" style="width:0%"></div>
+        <div class="htl-today-pin" id="htl-pin" style="left:0%"></div>
+        <div class="htl-today-flag" id="htl-flag" style="left:0%">TODAY</div>
+        ${MS.map((m, i) => {
+          const pct = Math.min(100, Math.max(0, ((m.date - start) / span) * 100));
+          const side = i % 2 === 0 ? 'above' : 'below';
+          return `<div class="htl-ms ${m.status} ${side}" style="left:${pct}%;top:50%">
+            <div class="htl-ms-label">${escHtml(m.label)}</div>
+            <div class="htl-ms-stem"></div>
+            <div class="htl-ms-dot"></div>
+            <div class="htl-tooltip">
+              <div class="htl-tooltip-title">${escHtml(m.title)}</div>
+              <div class="htl-tooltip-date">${m.date.toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'})}</div>
+              <div class="htl-tooltip-note">${escHtml(m.note)}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="htl-legend">
+        <div class="htl-leg-item"><div class="htl-leg-dot" style="background:#8abf56"></div>Completed</div>
+        <div class="htl-leg-item"><div class="htl-leg-dot" style="background:#22b09e"></div>Live / today</div>
+        <div class="htl-leg-item"><div class="htl-leg-dot" style="background:#d4903a"></div>At risk</div>
+        <div class="htl-leg-item"><div class="htl-leg-dot" style="background:#e05252"></div>Outstanding</div>
+      </div>
+    </div>`;
+
+  el._todayPct = todayPct;
+}
+
+function animateTimeline() {
+  const el = document.getElementById('animated-timeline');
+  if (!el || el._todayPct === undefined) return;
+  const pct = el._todayPct;
+  const fill = document.getElementById('htl-fill');
+  const pin  = document.getElementById('htl-pin');
+  const flag = document.getElementById('htl-flag');
+  if (fill) fill.style.width = pct + '%';
+  if (pin)  pin.style.left  = pct + '%';
+  if (flag) flag.style.left = pct + '%';
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.section-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('pane-' + name).classList.add('active');
+}
+
 document.getElementById('footer-date').textContent = 'Updated ' + new Date().toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
 
 if (localStorage.getItem('nanoone_theme') === 'light') {
@@ -1579,6 +1655,8 @@ renderStats();
 updateTabCount();
 renderAssigneeFilters();
 renderList();
+buildTimeline();
+requestAnimationFrame(() => setTimeout(animateTimeline, 120));
 </script>
 </body>
 </html>
