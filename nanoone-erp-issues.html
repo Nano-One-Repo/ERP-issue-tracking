@@ -701,7 +701,85 @@
   .htl-leg-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; }
   .htl-leg-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
-  /* ── Readiness section ── */
+  /* ── RACI matrix ── */
+  .raci-roles-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .raci-role-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .raci-role-label { font-size: 10px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 4px; }
+  .raci-role-name  { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+
+  .raci-legend {
+    display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; align-items: center;
+  }
+  .raci-leg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+
+  .raci-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 4px;
+    font-size: 11px; font-weight: 600; font-family: 'DM Mono', monospace;
+    flex-shrink: 0;
+  }
+  .raci-badge.r { background: rgba(224,82,82,0.18); color: #f08080; }
+  .raci-badge.a { background: rgba(212,144,58,0.18); color: #e8b070; }
+  .raci-badge.c { background: rgba(34,176,158,0.18); color: var(--nano-teal-light); }
+  .raci-badge.i  { background: rgba(126,149,176,0.18); color: #9ab0c8; }
+
+  .raci-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .raci-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    table-layout: fixed;
+  }
+  .raci-table thead tr {
+    background: var(--nano-navy-mid);
+    border-bottom: 1px solid var(--border-mid);
+  }
+  .raci-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    width: 20%;
+  }
+  .raci-process-col { width: 16%; }
+  .raci-table td {
+    padding: 10px 14px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .raci-table tbody tr:last-child td { border-bottom: none; }
+  .raci-table tbody tr:hover td { background: var(--card-hover); }
+  .raci-process {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 13px;
+    background: var(--card-bg);
+  }
+  .raci-table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+  .raci-table tbody tr:nth-child(even):hover td { background: var(--card-hover); }
+  .raci-table tr.raci-hidden { display: none; }
   .readiness-eyebrow {
     font-size: 11px;
     font-family: 'DM Mono', monospace;
@@ -897,6 +975,10 @@
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L10 6h4.5l-3.5 2.5 1.5 4.5L8 10.5l-4.5 3 1.5-4.5L1.5 6H6z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
       Go-live readiness
     </button>
+    <button class="section-tab" onclick="switchTab('raci',this)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+      RACI matrix
+    </button>
   </div>
 
   <!-- Issues pane -->
@@ -1054,6 +1136,152 @@
         <span class="pattern-tag">Cut Over Plan V14 covers: GL, AP, AR, Bank Recs, Transfer Orders, Inventory, Customer Orders</span>
         <span class="pattern-tag">No formal sign-off record found against the Cut Over Plan checklist</span>
       </div>
+    </div>
+  </div>
+  <!-- RACI pane -->
+  <div class="section-pane" id="pane-raci">
+    <div class="readiness-eyebrow">Source: ERP Matrix for review 20251030.xlsx — ERPConnect SharePoint · Last updated Feb 27 by Ted Jones</div>
+
+    <!-- Roles header -->
+    <div class="raci-roles-wrap">
+      <div class="raci-role-card">
+        <div class="raci-role-label">Sponsor</div>
+        <div class="raci-role-name">Carlo Valente</div>
+      </div>
+      <div class="raci-role-card">
+        <div class="raci-role-label">Project Manager</div>
+        <div class="raci-role-name" style="color:#e8b070;">Ted Jones <span class="external-tag" style="vertical-align:middle;">External PM</span></div>
+      </div>
+      <div class="raci-role-card">
+        <div class="raci-role-label">Senior IT Lead</div>
+        <div class="raci-role-name">Blake Wickman</div>
+      </div>
+      <div class="raci-role-card">
+        <div class="raci-role-label">Nano One Process Lead</div>
+        <div class="raci-role-name">Christian Lungu</div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="raci-legend">
+      <div class="raci-leg-item"><span class="raci-badge r">R</span> Responsible — does the work</div>
+      <div class="raci-leg-item"><span class="raci-badge a">A</span> Accountable — owns the outcome</div>
+      <div class="raci-leg-item"><span class="raci-badge c">C</span> Consulted — provides input</div>
+      <div class="raci-leg-item"><span class="raci-badge i">I</span> Informed — kept up to date</div>
+      <div class="raci-leg-item" style="margin-left:8px;font-size:11px;color:var(--text-muted);">BC = Burnaby · QC = Candiac</div>
+    </div>
+
+    <!-- Search -->
+    <div style="margin-bottom:16px;">
+      <input type="text" id="raci-search" placeholder="Filter by name or process…" oninput="filterRaci(this.value)" style="width:100%;max-width:380px;background:var(--card-bg);border:1px solid var(--border-mid);border-radius:6px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-primary);outline:none;">
+    </div>
+
+    <!-- Table -->
+    <div class="raci-table-wrap">
+      <table class="raci-table" id="raci-table">
+        <thead>
+          <tr>
+            <th class="raci-process-col">Process area</th>
+            <th><span class="raci-badge r">R</span> Responsible</th>
+            <th><span class="raci-badge a">A</span> Accountable</th>
+            <th><span class="raci-badge c">C</span> Consulted</th>
+            <th><span class="raci-badge i">I</span> Informed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="raci-process">SOM</td>
+            <td>Pierre Thibodeau (QC)<br>Hawa Barry (QC)</td>
+            <td>Pierre Thibodeau (QC)</td>
+            <td>Andrew Muckstadt (US)</td>
+            <td>Maryam Pirkalani (BC)<br>Chen Wang (QC)<br>Wei Weng (QC)</td>
+          </tr>
+          <tr>
+            <td class="raci-process">Finance</td>
+            <td>Ida Keenan (BC)<br>Lisa Mundy (BC)<br>Erika Haskell (QC)<br>Chen Wang (QC)</td>
+            <td>Wei Weng (QC)<br>Gary Minhas (BC)</td>
+            <td>PWC / ESS</td>
+            <td>Carlo Valente (BC)</td>
+          </tr>
+          <tr>
+            <td class="raci-process">CRM</td>
+            <td>Pierre Thibodeau (QC)</td>
+            <td>Pierre Thibodeau (QC)</td>
+            <td>Andrew Muckstadt (US)</td>
+            <td>Maryam Pirkalani (BC)<br>Carlo Valente (BC)</td>
+          </tr>
+          <tr>
+            <td class="raci-process">Inventory Control</td>
+            <td>Sean Eady (BC)<br>Viorel Stoian (QC)</td>
+            <td>Maryam Pirkalani (BC)<br>Hawa Barry (QC)</td>
+            <td>Maryam Pirkalani (BC)<br>Jasmin Dufour (QC)<br>Wei Weng (QC)</td>
+            <td>Pierre Thibodeau (QC)<br>Wei Weng (QC)<br>Erika Haskell (QC)<br>Chen Wang (QC)</td>
+          </tr>
+          <tr>
+            <td class="raci-process">Purchasing</td>
+            <td>Hawa Barry<br>Maryam Pirkalani (BC)</td>
+            <td>Maryam Pirkalani (BC)</td>
+            <td>Jasmin Dufour (QC)<br>O'Rian Reid (BC)</td>
+            <td>Ian Bernier (QC)<br>Wei Weng (QC)<br>Gary Minhas (BC)<br>Lisa Mundy (BC)<br>Erika Haskell (QC)<br>Chen Wang (QC)</td>
+          </tr>
+          <tr>
+            <td class="raci-process">Conception &amp; Engineering</td>
+            <td>Marius Jipa (QC)<br>Stéphane Doiron (QC)<br>O'Rian Reid (BC)</td>
+            <td>Jasmin Dufour (QC)</td>
+            <td>Yuri Yordanov (QC)</td>
+            <td>Denis Geoffroy (QC)</td>
+          </tr>
+          <tr>
+            <td class="raci-process">Production</td>
+            <td>Stéphane Doiron (QC)<br>Mital Patel (BC)</td>
+            <td>Jasmin Dufour (QC)<br>O'Rian Reid (BC)</td>
+            <td>Yuri Yordanov (QC)<br>Marius Jipa (QC)</td>
+            <td>Denis Geoffroy (QC)<br>Wei Weng (QC)<br>Erika Haskell (QC)</td>
+          </tr>
+          <tr>
+            <td class="raci-process">APS (Planning)</td>
+            <td>O'Rian Reid (BC)<br>Mital Patel (BC)<br>Stéphane Doiron (QC)</td>
+            <td>Jasmin Dufour</td>
+            <td>Maryam Pirkalani (BC/QC)</td>
+            <td>Wei Weng (QC)<br>Erika Haskell (QC)</td>
+          </tr>
+          <tr>
+            <td class="raci-process">Quality</td>
+            <td>Frédéric Cotton (QC)<br>Jasmin Dufour (QC)<br>Farhang (BC)</td>
+            <td>Christian Lungu (QC)</td>
+            <td>Jasmin Dufour (QC)</td>
+            <td>Denis Geoffroy (QC)</td>
+          </tr>
+          <tr>
+            <td class="raci-process">Service Order &amp; Maintenance</td>
+            <td>Jean-François Larivière (QC)<br>Ouissem Gharbi (QC)<br>David Renaud (QC)<br>Marcus Burre (BC)</td>
+            <td>Yuri Yordanov (QC)</td>
+            <td>Jasmin Dufour (QC)<br>Ian Bernier (QC)</td>
+            <td>Jasmin Dufour (QC)<br>Wei Weng (QC)<br>Erika Haskell (QC)</td>
+          </tr>
+          <tr>
+            <td class="raci-process">Multi-Co. &amp; Operational</td>
+            <td>Ida Keenan (BC)<br>Lisa Mundy (BC)<br>Erika Haskell &amp; Chen Wang (QC)</td>
+            <td>Wei Weng (QC)<br>Gary Minhas (BC)</td>
+            <td>Jasmin Dufour (QC)</td>
+            <td>Ian Bernier (QC)</td>
+          </tr>
+          <tr>
+            <td class="raci-process">Project Management</td>
+            <td>Ian Bernier (QC)</td>
+            <td>Ian Bernier (QC)</td>
+            <td>Jesse Speed (QC)</td>
+            <td>Erika Haskell (QC)<br>Chen Wang (QC)<br>Wei Weng (QC)</td>
+          </tr>
+          <tr>
+            <td class="raci-process">Factory Track</td>
+            <td>Marius Jipa (QC)<br>Stéphane Doiron (QC)</td>
+            <td>Jasmin Dufour (QC)</td>
+            <td>Yuri Yordanov (QC)</td>
+            <td>Wei Weng (QC)<br>Erika Haskell (QC)</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -1559,6 +1787,13 @@ function addIssue() {
   updateTabCount();
   renderAssigneeFilters();
   renderList();
+}
+
+function filterRaci(val) {
+  const q = val.toLowerCase();
+  document.querySelectorAll('#raci-table tbody tr').forEach(row => {
+    row.classList.toggle('raci-hidden', q && !row.textContent.toLowerCase().includes(q));
+  });
 }
 
 function formatDate(d) {
