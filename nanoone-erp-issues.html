@@ -213,10 +213,11 @@
   }
 
   .issue-card:hover { background: var(--card-hover); }
-  .issue-card.missing  { border-left-color: var(--red); }
-  .issue-card.partial  { border-left-color: var(--amber); }
-  .issue-card.met      { border-left-color: var(--nano-green); }
-  .issue-card.unknown  { border-left-color: #4a6078; }
+  .issue-card.missing    { border-left-color: var(--red); }
+  .issue-card.partial    { border-left-color: var(--amber); }
+  .issue-card.met        { border-left-color: var(--nano-green); }
+  .issue-card.unknown    { border-left-color: #4a6078; }
+  .issue-card.inprogress { border-left-color: var(--nano-teal-light); }
 
   .card-header {
     display: flex;
@@ -248,10 +249,11 @@
     font-weight: 500;
   }
 
-  .badge.missing { background: rgba(224,82,82,0.15); color: #f08080; border: 1px solid rgba(224,82,82,0.25); }
-  .badge.partial  { background: rgba(212,144,58,0.15); color: #e8b070; border: 1px solid rgba(212,144,58,0.25); }
-  .badge.met      { background: rgba(138,191,86,0.15); color: var(--nano-green-light); border: 1px solid rgba(138,191,86,0.25); }
-  .badge.unknown  { background: rgba(126,149,176,0.15); color: #9ab0c8; border: 1px solid rgba(126,149,176,0.25); }
+  .badge.missing    { background: rgba(224,82,82,0.15); color: #f08080; border: 1px solid rgba(224,82,82,0.25); }
+  .badge.partial    { background: rgba(212,144,58,0.15); color: #e8b070; border: 1px solid rgba(212,144,58,0.25); }
+  .badge.met        { background: rgba(138,191,86,0.15); color: var(--nano-green-light); border: 1px solid rgba(138,191,86,0.25); }
+  .badge.unknown    { background: rgba(126,149,176,0.15); color: #9ab0c8; border: 1px solid rgba(126,149,176,0.25); }
+  .badge.inprogress { background: rgba(34,176,158,0.15); color: var(--nano-teal-light); border: 1px solid rgba(34,176,158,0.25); }
 
   .assignee-pill {
     display: inline-flex;
@@ -906,6 +908,7 @@
           <div class="filters" id="filters">
             <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
             <button class="filter-btn" onclick="setFilter('missing',this)">Not delivered</button>
+            <button class="filter-btn" onclick="setFilter('inprogress',this)">In progress</button>
             <button class="filter-btn" onclick="setFilter('partial',this)">Partial</button>
             <button class="filter-btn" onclick="setFilter('met',this)">Met</button>
             <button class="filter-btn" onclick="setFilter('unknown',this)">Unknown</button>
@@ -1092,6 +1095,7 @@
         <option value="Carlo Valente">Carlo Valente</option>
         <option value="Jamin Dufour">Jamin Dufour</option>
         <option value="Maryam Pirkalani">Maryam Pirkalani</option>
+        <option value="ESS">ESS</option>
       </select>
     </div>
     <div class="form-group">
@@ -1104,6 +1108,7 @@
         <option value="Carlo Valente">Carlo Valente</option>
         <option value="Jamin Dufour">Jamin Dufour</option>
         <option value="Maryam Pirkalani">Maryam Pirkalani</option>
+        <option value="ESS">ESS</option>
       </select>
     </div>
     <div class="form-group">
@@ -1119,6 +1124,7 @@
       <select class="form-select" id="f-status">
         <option value="unknown">Unknown</option>
         <option value="missing">Not delivered</option>
+        <option value="inprogress">In progress</option>
         <option value="partial">Partial</option>
         <option value="met">Met</option>
       </select>
@@ -1133,7 +1139,7 @@
 <script>
 const STORAGE_KEY = 'nanoone_issues_v6';
 
-const USERS = ['Ted Jones','Blake Wickman','Gary Minhas','Carlo Valente','Jamin Dufour','Maryam Pirkalani'];
+const USERS = ['Ted Jones','Blake Wickman','Gary Minhas','Carlo Valente','Jamin Dufour','Maryam Pirkalani','ESS'];
 
 const EXTERNAL_PM = 'Ted Jones';
 
@@ -1300,14 +1306,15 @@ let currentFilter = 'all';
 let currentAssigneeFilter = 'all';
 
 function badgeLabel(s) {
-  return s === 'missing' ? 'Not delivered' : s === 'partial' ? 'Partial' : s === 'met' ? 'Met' : 'Unknown';
+  return s === 'missing' ? 'Not delivered' : s === 'partial' ? 'Partial' : s === 'met' ? 'Met' : s === 'inprogress' ? 'In progress' : 'Unknown';
 }
 
 function renderStats() {
-  const counts = { missing: 0, partial: 0, met: 0, unknown: 0 };
+  const counts = { missing: 0, partial: 0, met: 0, unknown: 0, inprogress: 0 };
   issues.forEach(i => { if (counts[i.status] !== undefined) counts[i.status]++; else counts.unknown++; });
   document.getElementById('stats-row').innerHTML = `
     <div class="stat"><div class="stat-num red">${counts.missing}</div><div class="stat-label">Not delivered</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--nano-teal-light)">${counts.inprogress}</div><div class="stat-label">In progress</div></div>
     <div class="stat"><div class="stat-num amber">${counts.partial}</div><div class="stat-label">Partial</div></div>
     <div class="stat"><div class="stat-num green">${counts.met}</div><div class="stat-label">Met</div></div>
     <div class="stat"><div class="stat-num" style="color:#9ab0c8">${counts.unknown}</div><div class="stat-label">Unknown</div></div>
@@ -1411,6 +1418,7 @@ function renderList() {
           <select class="status-select" onchange="changeStatus(${issue.id}, this.value)" onclick="event.stopPropagation()">
             <option value="unknown" ${issue.status==='unknown'?'selected':''}>Unknown</option>
             <option value="missing" ${issue.status==='missing'?'selected':''}>Not delivered</option>
+            <option value="inprogress" ${issue.status==='inprogress'?'selected':''}>In progress</option>
             <option value="partial" ${issue.status==='partial'?'selected':''}>Partial</option>
             <option value="met" ${issue.status==='met'?'selected':''}>Met</option>
           </select>
