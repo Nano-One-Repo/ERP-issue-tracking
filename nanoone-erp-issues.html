@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://msbkuividconhntrvzzg.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;">
 <title>ERP Project Issues — Nano One</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root {
     --nano-navy: #0e1f38;
@@ -546,6 +548,24 @@
     font-style: italic;
   }
 
+  .pattern-banner-full {
+    background: rgba(34,176,158,0.06);
+    border: 1px solid rgba(34,176,158,0.2);
+  }
+
+  .full-pattern-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .full-pattern-num {
+    font-size: 10px; font-family: 'DM Mono', monospace;
+    color: var(--nano-teal-light); letter-spacing: 0.1em; margin-bottom: 4px; opacity: 0.7;
+  }
+  .full-pattern-title { font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px; }
+  .full-pattern-body  { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
   /* ── Suggestion field ── */
   .suggestion-box {
     background: rgba(26,138,122,0.06);
@@ -598,7 +618,60 @@
     .card-body { padding-left: 18px; }
   }
 
-  /* ── Section tabs ── */
+  /* ── Login screen ── */
+  .login-overlay {
+    position: fixed; inset: 0; z-index: 999;
+    background: var(--nano-navy);
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .login-overlay.hidden { display: none; }
+  .login-card {
+    background: var(--nano-navy-mid);
+    border: 1px solid var(--border-mid);
+    border-radius: 14px;
+    padding: 36px 32px;
+    width: 100%; max-width: 380px;
+    text-align: center;
+  }
+  .login-logo { margin-bottom: 24px; }
+  .login-logo svg { height: 28px; width: auto; }
+  .login-title { font-size: 17px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px; }
+  .login-sub   { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
+  .login-modes { display: flex; flex-direction: column; gap: 10px; }
+  .login-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500;
+    padding: 12px 20px; border-radius: 8px;
+    cursor: pointer; transition: all 0.15s;
+    border: 1px solid var(--border-mid);
+    width: 100%;
+  }
+  .login-btn-admin {
+    background: var(--nano-teal); color: #fff; border-color: var(--nano-teal);
+  }
+  .login-btn-admin:hover { background: var(--nano-teal-light); border-color: var(--nano-teal-light); }
+  .login-btn-user  {
+    background: transparent; color: var(--text-secondary);
+  }
+  .login-btn-user:hover { background: var(--nano-navy-light); color: var(--text-primary); }
+  .login-divider { font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; margin: 4px 0; }
+  .login-hint { font-size: 11px; color: var(--text-muted); margin-top: 20px; font-family: 'DM Mono', monospace; }
+
+  /* ── Mode badge in header ── */
+  .mode-badge {
+    font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 4px; cursor: pointer;
+  }
+  .mode-badge.admin { background: rgba(34,176,158,0.15); color: var(--nano-teal-light); border: 1px solid rgba(34,176,158,0.3); }
+  .mode-badge.user  { background: rgba(126,149,176,0.15); color: #9ab0c8; border: 1px solid rgba(126,149,176,0.25); }
+
+  /* ── User-mode hides ── */
+  body.user-mode .admin-only { display: none !important; }
+  body.user-mode .card-actions { display: none !important; }
+  body.user-mode .notes-area  { pointer-events: none; opacity: 0.5; resize: none; }
+  .user-edit-actions { display: none; }
+  body.user-mode .user-edit-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
   .section-tabs {
     display: flex;
     gap: 0;
@@ -907,7 +980,71 @@
 </head>
 <body>
 
-<!-- Header -->
+<!-- Login screen -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 419.05 143.54" aria-label="Nano One Materials Corp">
+        <defs><clipPath id="cp-l"><rect width="419.05" height="143.54"/></clipPath></defs>
+        <g clip-path="url(#cp-l)">
+          <path fill="#8abf56" d="m0,31.51h11.4v5.07c4.75-4.75,9.18-6.65,15.52-6.65,5.22,0,10.45,1.58,13.77,4.28,4.44,3.64,6.02,8.07,6.02,16.47v56.53h-12.03v-56.21c0-7.44-3.96-11.4-11.24-11.4s-11.24,3.96-11.24,11.4v56.21H0V31.51Z"/>
+          <path fill="#8abf56" d="m75.21,72.52c-5.07,1.74-6.81,3.96-6.81,9.82v7.44c0,6.65,3.64,9.82,10.93,9.82,8.23,0,12.03-3.64,12.03-11.56v-20.43l-16.15,4.91Zm-17.89-16.31v-5.86c0-13.14,8.23-20.27,23.59-20.27s22.64,6.49,22.64,20.11v50.67c0,1.9.16,3.96.47,6.33h-11.88v-4.91c-3.32,4.28-8.39,6.33-15.68,6.33-13.14,0-20.27-6.17-20.27-17.73v-9.5c0-9.34,3.48-13.62,13.14-16.62l22.01-6.97v-7.28c0-7.13-3.48-10.61-10.61-10.61-7.76,0-11.88,3.48-11.88,10.14v6.17h-11.56Z"/>
+          <path fill="#8abf56" d="m114.8,31.51h11.4v5.07c4.75-4.75,9.18-6.65,15.52-6.65,5.23,0,10.45,1.58,13.78,4.28,4.43,3.64,6.02,8.07,6.02,16.47v56.53h-12.04v-56.21c0-7.44-3.96-11.4-11.24-11.4s-11.24,3.96-11.24,11.4v56.21h-12.19V31.51Z"/>
+          <path fill="#8abf56" d="m197.24,98.81c7.91,0,12.03-3.8,12.03-11.4v-36.1c0-7.44-4.12-11.4-12.03-11.4s-12.04,3.96-12.04,11.4v36.1c0,7.6,4.12,11.4,12.04,11.4m0,10.13c-16.31,0-24.23-6.97-24.23-21.53v-36.1c0-14.41,7.92-21.53,24.23-21.53s24.22,7.12,24.22,21.53v36.1c0,14.57-7.92,21.53-24.22,21.53"/>
+          <path fill="#ffffff" d="m244.76,95.64c3.01,3.64,8.71,5.7,15.36,5.7s12.51-2.06,15.52-5.7c2.22-2.53,3.01-5.86,3.01-11.72V24.86c0-5.86-.79-9.19-3.01-11.72-3-3.48-8.71-5.7-15.52-5.7s-12.35,2.22-15.36,5.7c-2.22,2.53-3.01,5.86-3.01,11.72v59.06c0,5.86.79,9.18,3.01,11.72m15.36,13.14c-18.52,0-27.08-7.91-27.08-24.86V24.86C233.04,7.92,241.6,0,260.12,0s27.24,7.92,27.24,24.86v59.06c0,16.94-8.71,24.86-27.24,24.86"/>
+          <path fill="#ffffff" d="m298.92,31.19h7.44v4.91c5.07-4.91,9.81-6.81,16.31-6.81,13.46,0,21.38,7.6,21.38,20.9v57h-7.92v-57c0-9.03-5.23-13.93-14.73-13.93s-14.57,4.91-14.57,13.93v57h-7.92V31.19Z"/>
+          <path fill="#ffffff" d="m394.87,62.86v-12.67c0-9.03-5.54-13.93-15.68-13.93s-15.67,4.91-15.67,13.93v12.67h31.35Zm7.92,25.33c0,13.78-8.08,20.9-23.59,20.9s-23.6-7.12-23.6-20.9v-38c0-13.78,8.08-20.9,23.6-20.9s23.59,7.12,23.59,20.9v20.11h-39.27v17.89c0,9.03,5.54,13.94,15.67,13.94s15.68-4.91,15.68-13.94v-9.03h7.92v9.03Z"/>
+          <path fill="#8abf56" d="m243.38,138.4c0,2.85-2.29,5.15-5.13,5.15s-5.14-2.3-5.14-5.15,2.3-5.14,5.14-5.14,5.13,2.31,5.13,5.14"/>
+          <path fill="#8abf56" d="m265.34,138.4c0,2.85-2.3,5.15-5.14,5.15s-5.14-2.3-5.14-5.15,2.3-5.14,5.14-5.14,5.14,2.31,5.14,5.14"/>
+          <path fill="#8abf56" d="m287.3,138.4c0,2.85-2.3,5.15-5.14,5.15s-5.14-2.3-5.14-5.15,2.3-5.14,5.14-5.14,5.14,2.31,5.14,5.14"/>
+          <path fill="#ffffff" d="m309.25,138.4c0,2.85-2.3,5.15-5.14,5.15s-5.14-2.3-5.14-5.15,2.3-5.14,5.14-5.14,5.14,2.31,5.14,5.14"/>
+          <path fill="#ffffff" d="m331.21,138.4c0,2.85-2.3,5.15-5.14,5.15s-5.14-2.3-5.14-5.15,2.3-5.14,5.14-5.14,5.14,2.31,5.14,5.14"/>
+          <path fill="#ffffff" d="m375.13,138.4c0,2.85-2.3,5.15-5.14,5.15s-5.14-2.3-5.14-5.15,2.3-5.14,5.14-5.14,5.14,2.31,5.14,5.14"/>
+          <path fill="#ffffff" d="m397.09,138.4c0,2.85-2.3,5.15-5.14,5.15s-5.14-2.3-5.14-5.15,2.3-5.14,5.14-5.14,5.14,2.31,5.14,5.14"/>
+          <path fill="#ffffff" d="m419.05,138.4c0,2.85-2.3,5.15-5.14,5.15s-5.14-2.3-5.14-5.15,2.3-5.14,5.14-5.14,5.14,2.31,5.14,5.14"/>
+        </g>
+      </svg>
+    </div>
+    <div class="login-title">ERP Project Issues</div>
+    <div class="login-sub">Infor CloudSuite Industrial · Nano One Materials Corp</div>
+    <div class="login-modes">
+
+      <!-- Admin section -->
+      <div id="admin-section">
+        <div style="display:flex;gap:8px;margin-bottom:6px;">
+          <input type="password" id="admin-pw" placeholder="Admin password"
+            style="flex:1;background:var(--nano-navy);border:1px solid var(--border-mid);border-radius:6px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-primary);outline:none;"
+            onkeydown="if(event.key==='Enter')checkAdminPw()">
+          <button class="login-btn login-btn-admin" style="width:auto;padding:10px 16px;" onclick="checkAdminPw()">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="vertical-align:middle"><path d="M8 1a3 3 0 100 6A3 3 0 008 1zM3 13c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M12 7l1.5 1.5L16 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div id="pw-error" style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;min-height:16px;text-align:left;margin-bottom:4px;"></div>
+      </div>
+
+      <div class="login-divider">or</div>
+
+      <div id="user-section">
+        <select id="user-name" class="form-select" style="margin-bottom:8px;background:var(--nano-navy);border:1px solid var(--border-mid);border-radius:6px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-primary);width:100%;outline:none;">
+          <option value="">Select your name…</option>
+          <option>Ted Jones</option>
+          <option>Blake Wickman</option>
+          <option>Gary Minhas</option>
+          <option>Carlo Valente</option>
+          <option>Jamin Dufour</option>
+          <option>Maryam Pirkalani</option>
+          <option>ESS</option>
+        </select>
+        <button class="login-btn login-btn-user" onclick="enterUserMode()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="vertical-align:middle;margin-right:6px"><path d="M8 1a3 3 0 100 6A3 3 0 008 1zM3 13c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Enter as team member
+        </button>
+        <div id="user-error" style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;min-height:16px;text-align:left;margin-top:4px;"></div>
+      </div>
+    </div>
+    <div class="login-hint">Admin session persists until browser is closed</div>
+  </div>
+</div>
 <header>
   <div class="logo-wrap">
     <!-- Nano One logo inline SVG — cls-4 overridden to white in CSS -->
@@ -938,11 +1075,12 @@
   </div>
   <span class="header-tag">ERP · Issue Tracker</span>
   <div class="header-actions">
+    <span id="mode-badge" class="mode-badge admin" onclick="showLogin()" title="Click to switch view"></span>
     <button class="hdr-btn" id="theme-btn" onclick="toggleTheme()">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       Light
     </button>
-    <button class="hdr-btn" onclick="exportPrint()">
+    <button class="hdr-btn admin-only" onclick="exportPrint()">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3 8H1.5A.5.5 0 001 8.5v5a.5.5 0 00.5.5h13a.5.5 0 00.5-.5v-5a.5.5 0 00-.5-.5H13M6 11h4M6 13h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       Export / Print
     </button>
@@ -1009,8 +1147,8 @@
 
     <div class="issues-list" id="issues-list"></div>
 
-    <!-- Pattern Summary -->
-    <div class="pattern-banner" style="margin-top:32px;">
+    <!-- Pattern Summary — Last 3 Days -->
+    <div class="pattern-banner admin-only" style="margin-top:32px;">
       <div class="pattern-banner-title">Pattern Summary — Last 3 Days</div>
       <div class="pattern-banner-body">Across recent issues, consistent themes point to a governance and execution breakdown — not a tooling problem.</div>
       <div class="pattern-tags">
@@ -1021,6 +1159,66 @@
         <span class="pattern-tag">Internal team compensating for vendor/PM failures</span>
       </div>
       <div class="pattern-conclusion">This is not a tooling problem — it is a governance + execution breakdown.</div>
+    </div>
+
+    <!-- Pattern Summary — Since Project Start -->
+    <div class="pattern-banner pattern-banner-full admin-only" style="margin-top:14px;">
+      <div class="pattern-banner-title" style="color:var(--nano-teal-light);">Pattern Summary — Since Project Start</div>
+      <div class="pattern-banner-body">Looking across the full project lifecycle — from initial ERP scope decisions through Phase 1 go-live — a set of deeper structural patterns have repeated consistently at every stage.</div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:14px 0;">
+
+        <div class="full-pattern-item">
+          <div class="full-pattern-num">01</div>
+          <div class="full-pattern-title">Scope was never rightsized</div>
+          <div class="full-pattern-body">The ERP was implemented at near full-enterprise scope for a company that had already pivoted away from in-house manufacturing. Modules like Projects, WIP, and Inventory — which require significant internal operational capacity to run — were included without validating whether Nano One had the bandwidth or the processes to support them. Projects went live at 0%. Inventory is still at 0%.</div>
+        </div>
+
+        <div class="full-pattern-item">
+          <div class="full-pattern-num">02</div>
+          <div class="full-pattern-title">PM accountability gap — start to finish</div>
+          <div class="full-pattern-body">The signed SOW established clear PM obligations: own the project plan, communicate status, manage Nano One resources, attend and prepare for weekly calls. None of these were consistently delivered. The pattern held from the earliest phases through go-live week — required meetings not held until too late, stakeholders not invited, documentation not maintained.</div>
+        </div>
+
+        <div class="full-pattern-item">
+          <div class="full-pattern-num">03</div>
+          <div class="full-pattern-title">Critical gaps discovered too late — repeatedly</div>
+          <div class="full-pattern-body">Lite licence limitations (cannot change currency on a PR, cannot attach PDFs) were discovered at go-live. Static table prep was missed until very late. UoM was at 0% at go-live. Vendor master data ownership was unresolved days before cutover. In each case, the gap existed long before it was surfaced — and the surfacing was reactive, not through any PM-led process.</div>
+        </div>
+
+        <div class="full-pattern-item">
+          <div class="full-pattern-num">04</div>
+          <div class="full-pattern-title">ESS / vendor delivery shortfalls</div>
+          <div class="full-pattern-body">ESS (the implementation vendor) failed to communicate the Lite licence limitations clearly. SOW expectations were not communicated to Nano One stakeholders. SyteLine environments showed active session errors during critical testing windows. PO Change Order report modifications remained outstanding through go-live. The project relied on the PM to hold ESS accountable — and the PM was not doing so.</div>
+        </div>
+
+        <div class="full-pattern-item">
+          <div class="full-pattern-num">05</div>
+          <div class="full-pattern-title">Internal team absorbed the deficit</div>
+          <div class="full-pattern-body">In the absence of PM-led coordination, Nano One staff — Blake, Maryam, Gary, Ian, Wei and others — informally took on coordination, data prep, and issue triage that should have been PM-owned or vendor-owned. This created invisible workload, unclear accountability, and a false sense of progress since work was getting done but without formal sign-off or tracking.</div>
+        </div>
+
+        <div class="full-pattern-item">
+          <div class="full-pattern-num">06</div>
+          <div class="full-pattern-title">Decision-making deferred until crisis</div>
+          <div class="full-pattern-body">Who handles PO receiving at each site? Who assigns expense accounts to PRs? Who is the DRI for vendor data cleanup? These questions existed throughout the project but were deferred — sometimes until the go/no-go decision itself. The go-live proceeded with several of these still unresolved. The decision log was never formally maintained.</div>
+        </div>
+
+        <div class="full-pattern-item">
+          <div class="full-pattern-num">07</div>
+          <div class="full-pattern-title">Training misalignment — theory vs real process</div>
+          <div class="full-pattern-body">Training was delivered but not aligned to actual configured workflows. Core concepts (PR vs PO, approval routing, WIP) remained unclear to users who were expected to be live in the system. The Roles End-to-End process document existed but was not used as a training alignment tool. End-user sign-off was not consistently obtained before go-live.</div>
+        </div>
+
+        <div class="full-pattern-item">
+          <div class="full-pattern-num">08</div>
+          <div class="full-pattern-title">No formal post-go-live safety net</div>
+          <div class="full-pattern-body">Post-implementation audit, open issue resolution, data integrity verification, and end-user efficiency measurement are all sitting at 0% with no assigned owners and no confirmed start dates. The project went live without a hypercare plan. The first financial month-end close in SyteLine — a high-risk event for any new ERP deployment — has no preparation underway.</div>
+        </div>
+
+      </div>
+
+      <div class="pattern-conclusion" style="border-top:1px solid rgba(34,176,158,0.2);padding-top:10px;margin-top:4px;color:var(--nano-teal-light);">The root cause across all eight patterns is the same: the project lacked a functioning PM to translate the SOW into execution. Everything else is a downstream consequence.</div>
     </div>
   </div>
 
@@ -1301,45 +1499,31 @@
       <label class="form-label">Issue title</label>
       <input class="form-input" id="f-title" type="text" placeholder="Short description of the gap or problem">
     </div>
-    <div class="form-group">
+    <div class="form-group modal-admin-only">
       <label class="form-label">SOW clause (if applicable)</label>
       <input class="form-input" id="f-sow" type="text" placeholder="Quote or reference the relevant SOW language">
     </div>
     <div class="form-group">
-      <label class="form-label">Gap / observed problem</label>
-      <textarea class="form-textarea" id="f-gap" placeholder="What is not happening that should be?"></textarea>
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="f-gap" placeholder="What is the issue or gap you've observed?"></textarea>
     </div>
-    <div class="form-group">
+    <div class="form-group modal-admin-only">
       <label class="form-label">Evidence to gather</label>
       <textarea class="form-textarea" id="f-evidence" placeholder="What documentation or data supports this issue?"></textarea>
     </div>
-    <div class="form-group">
+    <div class="form-group modal-admin-only">
       <label class="form-label">Raised by</label>
       <select class="form-select" id="f-raisedby">
         <option value="">— Unknown —</option>
-        <option value="Ted Jones">Ted Jones</option>
-        <option value="Blake Wickman">Blake Wickman</option>
-        <option value="Gary Minhas">Gary Minhas</option>
-        <option value="Carlo Valente">Carlo Valente</option>
-        <option value="Jamin Dufour">Jamin Dufour</option>
-        <option value="Maryam Pirkalani">Maryam Pirkalani</option>
-        <option value="ESS">ESS</option>
       </select>
     </div>
-    <div class="form-group">
+    <div class="form-group modal-admin-only">
       <label class="form-label">Assigned to</label>
       <select class="form-select" id="f-assignee">
         <option value="">— Unassigned —</option>
-        <option value="Ted Jones">Ted Jones</option>
-        <option value="Blake Wickman">Blake Wickman</option>
-        <option value="Gary Minhas">Gary Minhas</option>
-        <option value="Carlo Valente">Carlo Valente</option>
-        <option value="Jamin Dufour">Jamin Dufour</option>
-        <option value="Maryam Pirkalani">Maryam Pirkalani</option>
-        <option value="ESS">ESS</option>
       </select>
     </div>
-    <div class="form-group">
+    <div class="form-group modal-admin-only">
       <label class="form-label">Suggested action</label>
       <textarea class="form-textarea" id="f-suggestion" placeholder="What should be done to resolve this issue?"></textarea>
     </div>
@@ -1365,11 +1549,61 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'nanoone_issues_v6';
-
-const USERS = ['Ted Jones','Blake Wickman','Gary Minhas','Carlo Valente','Jamin Dufour','Maryam Pirkalani','ESS'];
+const USERS = [
+  // Project leads
+  'Ted Jones',
+  'Blake Wickman',
+  'Carlo Valente',
+  'Christian Lungu',
+  // Finance
+  'Wei Weng',
+  'Gary Minhas',
+  'Ida Keenan',
+  'Lisa Mundy',
+  'Erika Haskell',
+  'Chen Wang',
+  // Operations / Purchasing
+  'Maryam Pirkalani',
+  'Hawa Barry',
+  'Jasmin Dufour',
+  'Ian Bernier',
+  'Jesse Speed',
+  // Production / Engineering
+  'Marius Jipa',
+  'Stéphane Doiron',
+  'O\'Rian Reid',
+  'Mital Patel',
+  'Yuri Yordanov',
+  'Denis Geoffroy',
+  // Quality
+  'Frédéric Cotton',
+  'Farhang Nesvaderani',
+  // Service / Maintenance
+  'Jean-François Larivière',
+  'Ouissem Gharbi',
+  'David Renaud',
+  'Marcus Burre',
+  // Sales / CRM
+  'Pierre Thibodeau',
+  // Inventory
+  'Sean Eady',
+  'Viorel Stoian',
+  // External
+  'Andrew Muckstadt',
+  'ESS',
+];
 
 const EXTERNAL_PM = 'Ted Jones';
+
+function populateUserDropdowns() {
+  const opts = USERS.map(u => `<option value="${u}">${u}</option>`).join('');
+  ['f-raisedby','f-assignee'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = (id === 'f-raisedby' ? '<option value="">— Unknown —</option>' : '<option value="">— Unassigned —</option>') + opts;
+  });
+  const picker = document.getElementById('user-name');
+  if (picker) picker.innerHTML = '<option value="">Select your name…</option>' + opts;
+}
 
 function isExternal(name) { return name === EXTERNAL_PM; }
 
@@ -1390,9 +1624,9 @@ const seed = [
     id: 1,
     status: 'missing',
     assignee: 'Ted Jones',
-    title: 'Full operational responsibility for project success',
+    title: 'Project ownership and accountability — ongoing gaps',
     sow: 'Assumes full operational responsibility for the project — ensures that the project as defined in the Charter and the Scope Statement is successful.',
-    gap: 'No evidence of proactive ownership. Issues surface late with no corrective action initiated.',
+    gap: 'Project ownership and proactive issue resolution have not been consistently established. Issues are surfacing reactively rather than through structured tracking and follow-up.',
     evidence: 'Request the issues log with open/close dates. Count issues open >2 weeks with no PM-initiated resolution.',
     suggestion: 'Require the PM to submit a written corrective action plan within 5 business days. CFO to set a 30-day performance review with specific measurable milestones.'
   },
@@ -1400,9 +1634,9 @@ const seed = [
     id: 2,
     status: 'missing',
     assignee: 'Ted Jones',
-    title: 'Management of Nano One allocated resources',
+    title: 'Resource coordination and task direction',
     sow: 'Responsible for managing the resources Nano One Materials Corp has allocated to this project.',
-    gap: 'Resource assignments are unclear. Internal staff report receiving no direction on task priorities.',
+    gap: 'Resource assignments and task priorities have not been clearly communicated to internal staff. Team members have reported uncertainty about their current responsibilities.',
     evidence: 'Document instances where Nano One staff were idle, duplicating work, or misdirected. Request a resource allocation plan.',
     suggestion: 'Require a resource assignment matrix from the PM showing each Nano One staff member, their role, and current task. Review weekly at status calls.'
   },
@@ -1410,9 +1644,9 @@ const seed = [
     id: 3,
     status: 'missing',
     assignee: 'Ted Jones',
-    title: 'Project documentation maintained and current',
+    title: 'Project documentation — plan and issues list currency',
     sow: 'Ensures that the project documentation is maintained, including updates to the project plan, the issues list, et al.',
-    gap: 'Project plan has not been updated since kick-off. Issues list is stale or absent.',
+    gap: 'The project plan has not been updated regularly since kick-off. The issues list requires refreshing to reflect current status.',
     evidence: 'Request the project plan file with version history. Check last-modified date. Request the issues log.',
     suggestion: 'Require the PM to publish an updated project plan and live issues log within 48 hours, and maintain weekly updates as a condition of continued engagement.'
   },
@@ -1420,9 +1654,9 @@ const seed = [
     id: 4,
     status: 'partial',
     assignee: 'Ted Jones',
-    title: 'Weekly conference call attendance with ESS PM',
+    title: 'Weekly ESS call preparation and follow-through',
     sow: 'Attend weekly conference call with ESS Project Manager.',
-    gap: 'Calls attended but without agenda, status update, or issue triage. Attendance ≠ preparedness.',
+    gap: 'Weekly calls are being attended but structured agendas, status updates, and issue triage have not been consistently prepared in advance.',
     evidence: 'Review call recordings or meeting notes for quality of contributions over the last 4 weeks.',
     suggestion: 'Require a written agenda distributed 24 hours before each weekly call, and written minutes within 24 hours after. Non-compliance triggers formal notice.'
   },
@@ -1430,9 +1664,9 @@ const seed = [
     id: 5,
     status: 'missing',
     assignee: 'Ted Jones',
-    title: 'Project communications — deliverables, budget, timeline',
+    title: 'Structured project status communications',
     sow: 'Responsible for project communications, including progress of project deliverables, budget and timeline in relation to the scope document and project plan.',
-    gap: 'No structured status reports have been distributed. CFO and key stakeholders are not receiving formal updates.',
+    gap: 'Formal status reports covering deliverables, budget, and timeline have not been distributed consistently. Stakeholders have not been receiving regular structured updates.',
     evidence: 'Ask for the last written status report date and distribution list. Check inbox for any formal communications.',
     suggestion: 'Require weekly written status reports sent to the CFO and project team every Friday by 5pm. First report due within 5 business days. Template to be agreed and locked.'
   },
@@ -1440,9 +1674,9 @@ const seed = [
     id: 6,
     status: 'partial',
     assignee: 'Ted Jones',
-    title: 'Business / data processing expertise and guidance',
+    title: 'Business process guidance and decision facilitation',
     sow: 'Provides expertise and guidance in either the business or data processing area of the project.',
-    gap: 'Business process questions consistently deferred to internal staff without synthesising or guiding decisions.',
+    gap: 'Business process questions have been deferred to internal staff rather than being facilitated and synthesised through the project manager. Decision ownership has not been clearly established.',
     evidence: 'Review the decision log — identify decisions where PM input was expected but absent or unhelpful.',
     suggestion: 'Require the PM to chair a weekly decisions log review. Any deferred item must have a named owner and deadline within 48 hours.'
   },
@@ -1451,8 +1685,8 @@ const seed = [
     status: 'missing',
     assignee: 'Maryam Pirkalani',
     dateRaised: '2026-04-11',
-    title: 'No clear ownership for vendor data cleanup',
-    gap: 'Confusion over who is responsible for vendor master data cleanup — Finance, Maryam, or Lisa. Work began without clear sign-off authority. Acknowledged as late and overdue, with frustration that it should have been completed much earlier. Accountability gaps are actively slowing progress.',
+    title: 'Vendor master data cleanup — ownership not confirmed',
+    gap: 'Responsibility for vendor master data cleanup has not been clearly assigned across Finance, Purchasing, and QC teams. Work has proceeded without a single confirmed owner or sign-off authority, which is slowing progress.',
     evidence: 'Request a RACI for vendor master data cleanup. Identify who approved work starting without a defined owner. Document timeline of when this was first raised vs. when it was actioned.',
     suggestion: 'Assign a single named DRI (Directly Responsible Individual) for vendor data cleanup with a hard completion date. Escalate to CFO if ownership is not confirmed within 24 hours.'
   },
@@ -1461,8 +1695,8 @@ const seed = [
     status: 'missing',
     assignee: 'Ted Jones',
     dateRaised: '2026-04-11',
-    title: 'Project management failures — meetings, communication, stakeholder inclusion',
-    gap: 'Multiple concrete PM breakdowns identified: required meetings not held until far too late; SOW expectations not communicated to stakeholders; static table prep missed until very late; key stakeholders (e.g. Maryam Pirkalani) not invited to critical sessions. Result is reactive scrambling instead of managed execution.',
+    title: 'Meeting cadence, stakeholder inclusion, and SOW communication',
+    gap: 'Several required project meetings were held later than planned. Key stakeholders were not consistently included in critical sessions. SOW obligations and expectations have not been fully communicated to the broader project team, resulting in reactive rather than planned coordination.',
     evidence: 'Pull meeting calendar records. Cross-reference against SOW-required touchpoints. Document which stakeholders were missing from which meetings and when.',
     suggestion: 'Issue a formal written notice to the PM citing specific missed obligations from the SOW. Require a corrective action plan within 5 business days. CFO to review.'
   },
@@ -1471,8 +1705,8 @@ const seed = [
     status: 'missing',
     assignee: 'Ted Jones',
     dateRaised: '2026-04-11',
-    title: 'Go-live scope reduction communicated informally — no readiness confirmation',
-    gap: 'Projects module will not go live as planned. Approximately one-third of modules may not go live. Significant scope change communicated informally. Go-live discussions are occurring without shared understanding or formal readiness confirmation.',
+    title: 'Go-live scope changes — formal communication and readiness confirmation',
+    gap: 'Significant scope changes, including the deferral of the Projects module, have been communicated informally. A shared, documented understanding of the current go-live scope and formal readiness confirmation has not been established.',
     evidence: 'Request the original go-live scope document. Compare against current confirmed scope. Document who was informed, when, and through what channel.',
     suggestion: 'Require a formal scope change notice signed by both ESS and Nano One leadership. Schedule a readiness gate review with go/no-go criteria before any go-live date is confirmed.'
   },
@@ -1481,8 +1715,8 @@ const seed = [
     status: 'missing',
     assignee: 'Ted Jones',
     dateRaised: '2026-04-12',
-    title: 'System access and stability issues in SyteLine (TRD and PRD)',
-    gap: 'TRD and PRD environments showing "active session" errors when no active sessions exist. Users blocked from accessing environments during critical testing phases. Creates friction and delays at the worst possible time.',
+    title: 'SyteLine environment stability — active session errors',
+    gap: 'TRD and PRD environments are showing active session errors when no sessions are active, blocking user access during testing. This is creating friction during a critical project phase.',
     evidence: 'Document each instance with timestamp, affected user, and environment. Determine whether this is a licensing, configuration, or infrastructure issue. Confirm whether ESS support has been formally engaged.',
     suggestion: 'Raise a priority support ticket with ESS/Infor immediately. Require a root cause and resolution timeline within 48 hours. Track in this register until resolved.'
   },
@@ -1491,8 +1725,8 @@ const seed = [
     status: 'missing',
     assignee: 'Ted Jones',
     dateRaised: '2026-04-12',
-    title: 'Lite licence limitations discovered late — procurement functionality gaps',
-    gap: 'Lite licence restrictions discovered very late in the project: users cannot change currency on a PR, and cannot attach a PDF quote to a PR. These are core procurement expectations that were not clearly communicated by ESS. Directly impacts purchasing workflows.',
+    title: 'Lite licence procurement limitations — late discovery',
+    gap: 'Lite licence restrictions were identified late in the project: users cannot change currency on a PR or attach a PDF quote. These affect core purchasing workflows and require a resolution path before operations can proceed as planned.',
     evidence: 'Request the original licence specification from ESS. Compare against documented procurement workflow requirements. Determine when ESS first knew these limitations existed.',
     suggestion: 'Formally document the gap and escalate to ESS as a contractual issue. Request either a licence upgrade at no cost to Nano One, or a written workaround plan. Do not accept verbal assurances.'
   },
@@ -1501,8 +1735,8 @@ const seed = [
     status: 'missing',
     assignee: 'Ted Jones',
     dateRaised: '2026-04-12',
-    title: 'Decision-making vacuum — repeated pattern of deferred accountability',
-    gap: 'Recurring pattern of decisions not being made, accountability being unclear or avoided, and the PM asking how to hold people accountable after problems are already entrenched. Internal staff are backfilling work that should be PM-led.',
+    title: 'Decision backlog — unresolved items requiring ownership',
+    gap: 'A number of project decisions have remained open without clear ownership or resolution timelines. Internal staff have been filling coordination gaps in the interim. A structured approach to decision tracking and escalation is needed.',
     evidence: 'Compile a decision log listing every unresolved decision, who owns it, and how long it has been open. Count instances where internal staff completed work that should have been PM-driven.',
     suggestion: 'Establish a formal decision log reviewed weekly by CFO. Any decision open more than 5 business days without resolution triggers automatic escalation. PM must present this log at every status call.'
   },
@@ -1511,27 +1745,48 @@ const seed = [
     status: 'missing',
     assignee: 'Ted Jones',
     dateRaised: '2026-04-13',
-    title: 'Training gaps — core concepts unclear to participants',
-    gap: 'Critical concepts such as PR vs PO vs workflow approval routing remain unclear to core participants. Training not aligned with real processes. Forms and workflows are confusing even to those expected to use them daily. Contributes directly to go-live readiness risk.',
+    title: 'Training alignment — workflows and process concepts',
+    gap: 'Key workflow concepts including PR vs PO distinctions and approval routing are not yet fully understood by all core participants. Training materials have not been fully aligned to the configured system processes, which poses a readiness risk.',
     evidence: 'Survey core users on confidence with PR, PO, and approval workflow steps. Compare training materials against actual system configuration. Identify who delivered training and whether sign-off was obtained.',
     suggestion: 'Conduct targeted refresher sessions on PR/PO/workflow before go-live. Require sign-off from each user confirming competency. Delay go-live for any module where less than 80% of users cannot demonstrate the workflow.'
   }
 ];
 
-function load() {
+const SUPABASE_URL = 'https://msbkuividconhntrvzzg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zYmt1aXZpZGNvbmhudHJ2enpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2ODc0MDQsImV4cCI6MjA5MjI2MzQwNH0.bznUoyNPTnLOaNjBVd8Ic0xdlYuvtGJ3aLfRp7hyTzI';
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function loadFromSupabase() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(seed));
-  } catch { return JSON.parse(JSON.stringify(seed)); }
+    const { data, error } = await db.from('issues').select('data').eq('id', 1).single();
+    if (!error && data?.data) return data.data;
+  } catch(e) { console.warn('Supabase load failed, using seed', e); }
+  return JSON.parse(JSON.stringify(seed));
 }
 
-function save(issues) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(issues)); } catch {}
+async function saveToSupabase(issuesArr) {
+  try {
+    await db.from('issues').upsert({ id: 1, data: issuesArr, updated_at: new Date().toISOString() });
+  } catch(e) { console.warn('Supabase save failed', e); }
 }
 
-let issues = load();
+let issues = JSON.parse(JSON.stringify(seed));
 let currentFilter = 'all';
 let currentAssigneeFilter = 'all';
+
+let saveTimer = null;
+function save(issuesArr) {
+  issues = issuesArr;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => saveToSupabase(issuesArr), 400);
+}
+
+function isUserOwned(issue) {
+  const mode = sessionStorage.getItem('nanoone_mode');
+  const username = sessionStorage.getItem('nanoone_username');
+  return mode === 'user' && username && issue.raisedBy === username;
+}
 
 function badgeLabel(s) {
   return s === 'missing' ? 'Not delivered' : s === 'partial' ? 'Partial' : s === 'met' ? 'Met' : s === 'inprogress' ? 'In progress' : 'Unknown';
@@ -1614,22 +1869,22 @@ function renderList() {
       <div class="card-body" id="body-${issue.id}">
         ${issue.sow ? `<div class="detail-row"><div class="detail-label">SOW obligation</div><div class="sow-quote">${escHtml(issue.sow)}</div></div>` : ''}
         ${issue.gap ? `<div class="detail-row"><div class="detail-label">Gap observed</div><div class="detail-text">${escHtml(issue.gap)}</div></div>` : ''}
-        ${issue.evidence ? `<div class="detail-row"><div class="detail-label">Evidence to gather</div><div class="evidence-box">${escHtml(issue.evidence)}</div></div>` : ''}
+        ${issue.evidence ? `<div class="detail-row admin-only"><div class="detail-label">Evidence to gather</div><div class="evidence-box">${escHtml(issue.evidence)}</div></div>` : ''}
         <div class="detail-row">
           <div class="detail-label">Suggested action</div>
           <div class="suggestion-box" id="sug-text-${issue.id}">${issue.suggestion ? escHtml(issue.suggestion) : '<span style="color:var(--text-muted);font-style:italic;">No suggestion yet — click Edit to add one.</span>'}</div>
-          <textarea class="suggestion-edit" id="sug-edit-${issue.id}" onclick="event.stopPropagation()">${escHtml(issue.suggestion || '')}</textarea>
-          <div style="display:flex;gap:6px;margin-top:6px;">
+          <textarea class="suggestion-edit admin-only" id="sug-edit-${issue.id}" onclick="event.stopPropagation()">${escHtml(issue.suggestion || '')}</textarea>
+          <div class="admin-only" style="display:flex;gap:6px;margin-top:6px;">
             <button class="suggestion-edit-btn" id="sug-btn-${issue.id}" onclick="event.stopPropagation();toggleSuggestionEdit(${issue.id})">Edit</button>
             <button class="suggestion-edit-btn" id="sug-save-${issue.id}" style="display:none;background:rgba(26,138,122,0.15);" onclick="event.stopPropagation();saveSuggestion(${issue.id})">Save</button>
           </div>
         </div>
-        <div class="detail-row" style="margin-top:4px;">
+        <div class="detail-row admin-only" style="margin-top:4px;">
           <div class="detail-label">Notes <span style="font-size:10px;color:var(--text-muted);font-style:italic;letter-spacing:0;">(auto-saved)</span></div>
           <textarea class="notes-area" id="notes-${issue.id}" placeholder="Add meeting notes, follow-up actions, or context here…" onclick="event.stopPropagation()" oninput="saveNotes(${issue.id})">${escHtml(issue.notes || '')}</textarea>
           <span class="notes-saved-flash" id="notes-flash-${issue.id}">Saved</span>
         </div>
-        <div class="card-actions">
+        <div class="card-actions admin-only">
           <label style="font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;margin-right:4px">Raised by</label>
           <select class="status-select" onchange="changeField(${issue.id},'raisedBy',this.value)" onclick="event.stopPropagation()">
             <option value="" ${!issue.raisedBy?'selected':''}>— Unknown —</option>
@@ -1652,6 +1907,18 @@ function renderList() {
           </select>
           <button class="btn-cancel" style="font-size:12px;padding:4px 12px;color:var(--red);border-color:rgba(224,82,82,0.3)" onclick="deleteIssue(${issue.id}, event)">Remove</button>
         </div>
+        ${isUserOwned(issue) ? `
+        <div class="card-actions user-edit-actions">
+          <label style="font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;margin-right:4px">Status</label>
+          <select class="status-select" onchange="changeStatus(${issue.id}, this.value)" onclick="event.stopPropagation()">
+            <option value="unknown" ${issue.status==='unknown'?'selected':''}>Unknown</option>
+            <option value="missing" ${issue.status==='missing'?'selected':''}>Not delivered</option>
+            <option value="inprogress" ${issue.status==='inprogress'?'selected':''}>In progress</option>
+            <option value="partial" ${issue.status==='partial'?'selected':''}>Partial</option>
+            <option value="met" ${issue.status==='met'?'selected':''}>Met</option>
+          </select>
+          <span style="font-size:11px;color:var(--text-muted);margin-left:8px;font-family:'DM Mono',monospace;">Your issue</span>
+        </div>` : ''}
       </div>
     </div>
   `).join('');
@@ -1753,7 +2020,20 @@ function setFilter(val, btn) {
   renderList();
 }
 
-function openModal() { document.getElementById('modal').classList.add('open'); }
+function openModal() {
+  const modal = document.getElementById('modal');
+  modal.classList.add('open');
+  const mode = sessionStorage.getItem('nanoone_mode');
+  const username = sessionStorage.getItem('nanoone_username');
+  if (mode === 'user' && username) {
+    const rb = document.getElementById('f-raisedby');
+    if (rb) rb.value = username;
+    // Hide admin-only modal fields in user mode
+    modal.querySelectorAll('.modal-admin-only').forEach(el => el.style.display = 'none');
+  } else {
+    modal.querySelectorAll('.modal-admin-only').forEach(el => el.style.display = '');
+  }
+}
 function closeModal() {
   document.getElementById('modal').classList.remove('open');
   ['f-title','f-sow','f-gap','f-evidence'].forEach(id => document.getElementById(id).value = '');
@@ -1768,18 +2048,23 @@ function maybeClose(e) { if (e.target === document.getElementById('modal')) clos
 function addIssue() {
   const title = document.getElementById('f-title').value.trim();
   if (!title) { document.getElementById('f-title').focus(); return; }
+  const mode = sessionStorage.getItem('nanoone_mode');
+  const sessionUser = sessionStorage.getItem('nanoone_username');
+  const raisedBy = mode === 'user' && sessionUser
+    ? sessionUser
+    : document.getElementById('f-raisedby').value;
   const maxId = issues.reduce((m, i) => Math.max(m, i.id), 0);
   issues.push({
     id: maxId + 1,
     status: document.getElementById('f-status').value,
-    assignee: document.getElementById('f-assignee').value,
-    raisedBy: document.getElementById('f-raisedby').value,
+    assignee: mode === 'user' ? '' : document.getElementById('f-assignee').value,
+    raisedBy,
     dateRaised: document.getElementById('f-date').value,
-    suggestion: document.getElementById('f-suggestion').value.trim(),
+    suggestion: mode === 'user' ? '' : document.getElementById('f-suggestion').value.trim(),
     title,
-    sow: document.getElementById('f-sow').value.trim(),
+    sow: mode === 'user' ? '' : document.getElementById('f-sow').value.trim(),
     gap: document.getElementById('f-gap').value.trim(),
-    evidence: document.getElementById('f-evidence').value.trim()
+    evidence: mode === 'user' ? '' : document.getElementById('f-evidence').value.trim()
   });
   save(issues);
   closeModal();
@@ -1787,6 +2072,68 @@ function addIssue() {
   updateTabCount();
   renderAssigneeFilters();
   renderList();
+}
+
+const ADMIN_HASH = 'c173a1dd28f660ba45aa227fabe8e18a50727c3ecdbd890f5ac2dd433a545916';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function enterUserMode() {
+  const name = document.getElementById('user-name').value;
+  const err = document.getElementById('user-error');
+  if (!name) { err.textContent = 'Please select your name.'; return; }
+  err.textContent = '';
+  sessionStorage.setItem('nanoone_mode', 'user');
+  sessionStorage.setItem('nanoone_username', name);
+  document.getElementById('login-overlay').classList.add('hidden');
+  applyMode('user', name);
+}
+
+async function checkAdminPw() {
+  const pw = document.getElementById('admin-pw').value;
+  const err = document.getElementById('pw-error');
+  if (!pw) { err.textContent = 'Enter the admin password.'; return; }
+  const hash = await sha256(pw);
+  if (hash === ADMIN_HASH) {
+    err.textContent = '';
+    document.getElementById('admin-pw').value = '';
+    enterMode('admin');
+  } else {
+    err.textContent = 'Incorrect password.';
+    document.getElementById('admin-pw').value = '';
+    document.getElementById('admin-pw').focus();
+  }
+}
+
+function enterMode(mode) {
+  sessionStorage.setItem('nanoone_mode', mode);
+  document.getElementById('login-overlay').classList.add('hidden');
+  applyMode(mode);
+}
+
+function showLogin() {
+  document.getElementById('login-overlay').classList.remove('hidden');
+  setTimeout(() => {
+    const pw = document.getElementById('admin-pw');
+    if (pw) pw.focus();
+  }, 50);
+}
+
+function applyMode(mode, username) {
+  const badge = document.getElementById('mode-badge');
+  if (mode === 'admin') {
+    document.body.classList.remove('user-mode');
+    if (badge) { badge.textContent = 'Admin'; badge.className = 'mode-badge admin'; }
+  } else {
+    document.body.classList.add('user-mode');
+    const name = username || sessionStorage.getItem('nanoone_username') || 'Team';
+    const initials = name.split(' ').map(p=>p[0]).join('').toUpperCase().slice(0,2);
+    if (badge) { badge.textContent = initials; badge.className = 'mode-badge user'; badge.title = name; }
+    renderList();
+  }
 }
 
 function filterRaci(val) {
@@ -1811,72 +2158,115 @@ function buildTimeline() {
   if (!el) return;
 
   const MS = [
-    { date: new Date(2026,2,9),  label: 'Cutover opens',     status: 'done', title: 'Cutover window opens',               note: '28-day window begins. PRD environment confirmed available.' },
-    { date: new Date(2026,2,20), label: 'Params loaded',     status: 'done', title: 'Parameters & supporting tables',      note: 'GL, AP, AR, Fixed Assets, Project codes loaded to PRD. 100%.' },
-    { date: new Date(2026,2,25), label: 'Static data',       status: 'done', title: 'Static data load',                   note: 'Non-inventory items, Fixed Assets, Vendors validated and signed off.' },
-    { date: new Date(2026,2,31), label: 'Readiness + cutoff',status: 'done', title: 'Readiness assessed & QB locked',     note: 'Overall 82.14%. Projects flagged not feasible. Quickbooks activities locked at March 31.' },
-    { date: new Date(2026,3,1),  label: 'Go / No-Go',       status: 'done', title: 'Go / No-Go decision',                note: 'Sign-off made. Projects deferred. Financials approved to proceed.' },
-    { date: new Date(2026,3,3),  label: 'Data loads',        status: 'done', title: 'Dynamic data load + GL balances',    note: 'Purchasing at 90%. GL opening balances 100%. Trial Balance reconciled.' },
-    { date: new Date(2026,3,8),  label: 'GO-LIVE',           status: 'live', title: 'Live operations begin',              note: 'Quickbooks locked read-only. SyteLine is the system of record.' },
-    { date: new Date(2026,3,14), label: 'TODAY',             status: 'live', title: 'Today — April 14',                  note: 'Day 6 post go-live. Projects/WIP and Inventory setup still at 0%.' },
-    { date: new Date(2026,3,30), label: 'Post go-live due',  status: 'crit', title: 'Post go-live activities due',        note: 'Audit, issue resolution, efficiency measurement — all at 0%.' },
-    { date: new Date(2026,4,1),  label: 'WIP deadline',      status: 'risk', title: 'Projects / WIP subledger due',       note: '0% complete. 29-day task started April 2. Owner: Ian / Wei.' },
-    { date: new Date(2026,4,8),  label: 'Month-end close',   status: 'risk', title: 'First financial month-end close',    note: '0% started. First close in SyteLine. Owner: Monica.' },
+    { date: new Date(2026,2,9),  label: 'Cutover opens',    status: 'done',  title: 'Cutover window opens',           note: '28-day window begins. PRD environment confirmed available.' },
+    { date: new Date(2026,2,20), label: 'Params loaded',    status: 'done',  title: 'Parameters & supporting tables', note: 'GL, AP, AR, Fixed Assets, Project codes loaded to PRD. 100%.' },
+    { date: new Date(2026,2,25), label: 'Static data',      status: 'done',  title: 'Static data load',               note: 'Non-inventory items, Fixed Assets, Vendors signed off.' },
+    { date: new Date(2026,2,31), label: 'Readiness scored', status: 'done',  title: 'Readiness & QB locked',          note: 'Overall 82.14%. Projects flagged not feasible. QB locked at March 31.' },
+    { date: new Date(2026,3,1),  label: 'Go / No-Go',      status: 'done',  title: 'Go / No-Go decision',            note: 'Sign-off made. Projects deferred. Financials approved.' },
+    { date: new Date(2026,3,3),  label: 'Data loads',       status: 'done',  title: 'Dynamic data + GL balances',     note: 'Purchasing 90%. GL opening balances 100%. Trial Balance reconciled.' },
+    { date: new Date(2026,3,8),  label: 'GO-LIVE',          status: 'live',  title: 'Live operations begin',          note: 'QuickBooks read-only. SyteLine is system of record.' },
+    { date: new Date(2026,3,20), label: 'TODAY',             status: 'today', title: 'Today — April 20',              note: 'Day 12 post go-live. Projects/WIP and Inventory still at 0%.' },
+    { date: new Date(2026,3,30), label: 'Post go-live',     status: 'crit',  title: 'Post go-live activities due',    note: 'Audit, issue resolution, data integrity — all at 0%.' },
+    { date: new Date(2026,4,1),  label: 'WIP deadline',     status: 'risk',  title: 'Projects/WIP subledger due',     note: '0% complete. 29-day task. Owner: Ian / Wei.' },
+    { date: new Date(2026,4,8),  label: 'Month-end',        status: 'risk',  title: 'First month-end close',          note: '0% started. First close in SyteLine. Owner: Monica.' },
   ];
 
-  const today = new Date(2026,3,14);
-  const start = new Date(2026,2,1);
-  const end   = new Date(2026,4,15);
-  const span  = end - start;
-  const todayPct = Math.min(100, Math.max(0, ((today - start) / span) * 100));
-  const dateStr = today.toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
+  const today  = new Date(2026,3,20);
+  const start  = new Date(2026,2,1);
+  const end    = new Date(2026,4,18);
+  const span   = end - start;
+  const pctOf  = d => Math.min(99, Math.max(1, ((d - start) / span) * 100));
+  const COLORS = { done:'#8abf56', live:'#22b09e', today:'#22b09e', risk:'#d4903a', crit:'#e05252' };
 
-  el.innerHTML = `
-    <div class="htl-wrap">
-      <div class="htl-today-bar">
-        <span class="htl-today-label">Timeline — March 2026 to May 2026</span>
-        <span class="htl-today-date">Today: ${dateStr}</span>
-      </div>
-      <div class="htl-track-outer" id="htl-track">
-        <div class="htl-track-fill" id="htl-fill" style="width:0%"></div>
-        <div class="htl-today-pin" id="htl-pin" style="left:0%"></div>
-        <div class="htl-today-flag" id="htl-flag" style="left:0%">TODAY</div>
-        ${MS.map((m, i) => {
-          const pct = Math.min(100, Math.max(0, ((m.date - start) / span) * 100));
-          const side = i % 2 === 0 ? 'above' : 'below';
-          return `<div class="htl-ms ${m.status} ${side}" style="left:${pct}%;top:50%">
-            <div class="htl-ms-label">${escHtml(m.label)}</div>
-            <div class="htl-ms-stem"></div>
-            <div class="htl-ms-dot"></div>
-            <div class="htl-tooltip">
-              <div class="htl-tooltip-title">${escHtml(m.title)}</div>
-              <div class="htl-tooltip-date">${m.date.toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'})}</div>
-              <div class="htl-tooltip-note">${escHtml(m.note)}</div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-      <div class="htl-legend">
-        <div class="htl-leg-item"><div class="htl-leg-dot" style="background:#8abf56"></div>Completed</div>
-        <div class="htl-leg-item"><div class="htl-leg-dot" style="background:#22b09e"></div>Live / today</div>
-        <div class="htl-leg-item"><div class="htl-leg-dot" style="background:#d4903a"></div>At risk</div>
-        <div class="htl-leg-item"><div class="htl-leg-dot" style="background:#e05252"></div>Outstanding</div>
-      </div>
-    </div>`;
+  const W = 860;
+  const trackY = 80;
+
+  const dots = MS.map((m, i) => ({
+    m, i,
+    x: (pctOf(m.date) / 100) * W,
+    above: i % 2 === 0,
+    col: COLORS[m.status] || '#9ab0c8',
+    r: m.status === 'today' ? 7 : 5,
+    isToday: m.status === 'today'
+  }));
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  const svgContent = dots.map(function(d) {
+    var x = d.x, col = d.col, r = d.r, above = d.above, m = d.m;
+    var stemY1 = above ? trackY - r : trackY + r;
+    var stemY2 = above ? trackY - r - 18 : trackY + r + 18;
+    var labelY = above ? 38 : 128;
+    var pulse = d.isToday
+      ? '<animate attributeName="r" values="' + r + ';' + (r+3) + ';' + r + '" dur="2s" repeatCount="indefinite"/>'
+      : '';
+    var glow = d.isToday
+      ? '<circle cx="' + x + '" cy="' + trackY + '" r="' + (r+5) + '" fill="' + col + '" opacity="0.15"><animate attributeName="r" values="' + (r+3) + ';' + (r+8) + ';' + (r+3) + '" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.15;0.05;0.15" dur="2s" repeatCount="indefinite"/></circle>'
+      : '';
+    var fw = d.isToday ? '600' : '400';
+    var fc = d.isToday ? col : '#5a7898';
+    return (
+      glow +
+      '<line x1="' + x + '" y1="' + stemY1 + '" x2="' + x + '" y2="' + stemY2 + '" stroke="' + col + '" stroke-width="1.2" opacity="0.5"/>' +
+      '<circle cx="' + x + '" cy="' + trackY + '" r="' + r + '" fill="' + col + '">' + pulse + '</circle>' +
+      '<text x="' + x + '" y="' + labelY + '" text-anchor="middle" font-family="DM Mono,monospace" font-size="9" fill="' + fc + '" font-weight="' + fw + '">' + esc(m.label) + '</text>'
+    );
+  }).join('');
+
+  // Tooltip hit areas — rendered last so they're on top
+  var tooltips = dots.map(function(d) {
+    var x = d.x, col = d.col, above = d.above, m = d.m;
+    var ttX = x > W - 150 ? x - 160 : x + 10;
+    var ttY = above ? trackY - 90 : trackY + 14;
+    return (
+      '<g class="htl-tip-g" data-idx="' + d.i + '">' +
+      '<circle cx="' + x + '" cy="' + trackY + '" r="14" fill="transparent" style="cursor:pointer"/>' +
+      '<g class="htl-tip-box" style="display:none;pointer-events:none">' +
+      '<rect x="' + ttX + '" y="' + ttY + '" width="150" height="62" rx="6" fill="#172d4e" stroke="' + col + '" stroke-width="1" stroke-opacity="0.5"/>' +
+      '<text x="' + (ttX+8) + '" y="' + (ttY+16) + '" font-family="DM Sans,sans-serif" font-size="10.5" fill="#e8edf3" font-weight="500">' + esc(m.title) + '</text>' +
+      '<text x="' + (ttX+8) + '" y="' + (ttY+29) + '" font-family="DM Mono,monospace" font-size="8.5" fill="#4a6078">' + m.date.toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'}) + '</text>' +
+      '<text x="' + (ttX+8) + '" y="' + (ttY+42) + '" font-family="DM Sans,sans-serif" font-size="9" fill="#7e95b0">' + esc(m.note.slice(0,60)) + (m.note.length > 60 ? '…' : '') + '</text>' +
+      '</g></g>'
+    );
+  }).join('');
+
+  var todayPct = pctOf(today);
+
+  el.innerHTML =
+    '<div class="htl-wrap">' +
+    '<div class="htl-today-bar">' +
+    '<span class="htl-today-label">Project timeline — March to May 2026</span>' +
+    '<span class="htl-today-date">Today: ' + today.toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'}) + '</span>' +
+    '</div>' +
+    '<svg id="htl-svg" viewBox="0 0 ' + W + ' 158" preserveAspectRatio="xMidYMid meet" style="width:100%;display:block;overflow:visible;margin:4px 0 0">' +
+    '<defs><linearGradient id="htl-grad" x1="0" x2="1"><stop offset="0%" stop-color="#8abf56"/><stop offset="55%" stop-color="#22b09e"/><stop offset="82%" stop-color="#d4903a"/><stop offset="100%" stop-color="#e05252"/></linearGradient></defs>' +
+    '<rect x="0" y="' + (trackY-3) + '" width="' + W + '" height="6" rx="3" fill="#172d4e"/>' +
+    '<rect id="htl-fill" x="0" y="' + (trackY-3) + '" width="0" height="6" rx="3" fill="url(#htl-grad)"/>' +
+    svgContent +
+    tooltips +
+    '</svg>' +
+    '<div class="htl-legend">' +
+    '<div class="htl-leg-item"><div class="htl-leg-dot" style="background:#8abf56"></div>Completed</div>' +
+    '<div class="htl-leg-item"><div class="htl-leg-dot" style="background:#22b09e"></div>Live / today</div>' +
+    '<div class="htl-leg-item"><div class="htl-leg-dot" style="background:#d4903a"></div>At risk</div>' +
+    '<div class="htl-leg-item"><div class="htl-leg-dot" style="background:#e05252"></div>Outstanding</div>' +
+    '</div></div>';
+
+  el.querySelectorAll('.htl-tip-g').forEach(function(g) {
+    var box = g.querySelector('.htl-tip-box');
+    g.addEventListener('mouseenter', function() { if (box) box.style.display = 'block'; });
+    g.addEventListener('mouseleave', function() { if (box) box.style.display = 'none'; });
+  });
 
   el._todayPct = todayPct;
+  el._W = W;
 }
 
 function animateTimeline() {
-  const el = document.getElementById('animated-timeline');
+  var el = document.getElementById('animated-timeline');
   if (!el || el._todayPct === undefined) return;
-  const pct = el._todayPct;
-  const fill = document.getElementById('htl-fill');
-  const pin  = document.getElementById('htl-pin');
-  const flag = document.getElementById('htl-flag');
-  if (fill) fill.style.width = pct + '%';
-  if (pin)  pin.style.left  = pct + '%';
-  if (flag) flag.style.left = pct + '%';
+  var fill = document.getElementById('htl-fill');
+  if (fill) fill.setAttribute('width', String((el._todayPct / 100) * el._W));
 }
 
 function switchTab(name, btn) {
@@ -1886,20 +2276,35 @@ function switchTab(name, btn) {
   document.getElementById('pane-' + name).classList.add('active');
 }
 
-document.getElementById('footer-date').textContent = 'Updated ' + new Date().toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
-
 if (localStorage.getItem('nanoone_theme') === 'light') {
   document.body.classList.add('light');
   const btn = document.getElementById('theme-btn');
   if (btn) btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M13 8.5A5.5 5.5 0 116.5 2a4 4 0 006.5 6.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg> Dark`;
 }
 
-renderStats();
-updateTabCount();
-renderAssigneeFilters();
-renderList();
-buildTimeline();
-requestAnimationFrame(() => setTimeout(animateTimeline, 120));
+const savedMode = sessionStorage.getItem('nanoone_mode');
+if (savedMode) {
+  document.getElementById('login-overlay').classList.add('hidden');
+  applyMode(savedMode);
+}
+
+async function init() {
+  document.getElementById('footer-date').textContent = 'Updated ' + new Date().toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
+
+  populateUserDropdowns();
+
+  const loaded = await loadFromSupabase();
+  issues = loaded;
+
+  renderStats();
+  updateTabCount();
+  renderAssigneeFilters();
+  renderList();
+  buildTimeline();
+  requestAnimationFrame(() => setTimeout(animateTimeline, 120));
+}
+
+init();
 </script>
 </body>
 </html>
