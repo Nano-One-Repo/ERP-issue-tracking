@@ -774,7 +774,48 @@
   .htl-leg-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; }
   .htl-leg-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
-  /* ── RACI matrix ── */
+  /* ── Severity badges ── */
+  .sev-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-family:'DM Mono',monospace; font-weight:600; padding:2px 8px; border-radius:4px; text-transform:uppercase; letter-spacing:0.08em; }
+  .sev-badge.critical { background:rgba(224,82,82,0.2); color:#f08080; border:1px solid rgba(224,82,82,0.3); }
+  .sev-badge.high     { background:rgba(212,144,58,0.2); color:#e8b070; border:1px solid rgba(212,144,58,0.3); }
+  .sev-badge.medium   { background:rgba(212,190,58,0.2); color:#d4c050; border:1px solid rgba(212,190,58,0.3); }
+  .sev-badge.low      { background:rgba(138,191,86,0.2); color:#8abf56; border:1px solid rgba(138,191,86,0.3); }
+  .sev-badge.info     { background:rgba(126,149,176,0.2); color:#9ab0c8; border:1px solid rgba(126,149,176,0.3); }
+
+  /* ── Type + Module chips ── */
+  .meta-chip { display:inline-flex; align-items:center; font-size:11px; font-family:'DM Mono',monospace; color:var(--text-muted); background:var(--nano-navy-mid); border:1px solid var(--border); padding:2px 8px; border-radius:4px; gap:4px; }
+
+  /* ── Attachment drop zone ── */
+  .attach-drop {
+    border:1px dashed var(--border-mid); border-radius:8px;
+    padding:18px; display:flex; align-items:center; justify-content:center;
+    gap:10px; cursor:pointer; transition:border-color 0.15s, background 0.15s;
+  }
+  .attach-drop:hover, .attach-drop.dragover { border-color:var(--nano-teal-light); background:rgba(34,176,158,0.05); }
+  .attach-chip {
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--nano-navy-mid); border:1px solid var(--border); border-radius:6px;
+    padding:4px 10px; font-size:11px; font-family:'DM Mono',monospace; color:var(--text-secondary);
+  }
+  .attach-chip a { color:var(--nano-teal-light); text-decoration:none; }
+  .attach-chip a:hover { text-decoration:underline; }
+  .attach-chip-remove { cursor:pointer; color:var(--text-muted); font-size:13px; line-height:1; margin-left:2px; }
+  .attach-chip-remove:hover { color:var(--red); }
+
+  /* ── Export button ── */
+  .export-menu { position:relative; display:inline-block; }
+  .export-dropdown {
+    display:none; position:absolute; top:calc(100% + 4px); right:0;
+    background:var(--nano-navy-mid); border:1px solid var(--border-mid); border-radius:8px;
+    min-width:160px; z-index:50; overflow:hidden;
+  }
+  .export-dropdown.open { display:block; }
+  .export-option {
+    display:flex; align-items:center; gap:8px; padding:10px 14px;
+    font-size:13px; color:var(--text-secondary); cursor:pointer;
+    font-family:'DM Sans',sans-serif; border:none; background:transparent; width:100%; text-align:left;
+  }
+  .export-option:hover { background:var(--nano-navy-light); color:var(--text-primary); }
   .raci-roles-wrap {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1080,7 +1121,26 @@
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       Light
     </button>
-    <button class="hdr-btn admin-only" onclick="exportPrint()">
+    <div class="export-menu admin-only">
+      <button class="hdr-btn" onclick="toggleExportMenu(event)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 7l4 4 4-4M2 13h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Export
+      </button>
+      <div class="export-dropdown" id="export-dropdown">
+        <button class="export-option" onclick="exportCSV()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5 5h6M5 8h6M5 11h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Export as CSV
+        </button>
+        <button class="export-option" onclick="exportJSON()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 2C3 2 2 3 2 4v8c0 1 1 2 2 2h8c1 0 2-1 2-2V4c0-1-1-2-2-2H4z" stroke="currentColor" stroke-width="1.3"/><path d="M5.5 6l1.5 2-1.5 2M10.5 6L9 8l1.5 2M7 11h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Export as JSON
+        </button>
+        <button class="export-option" onclick="exportPrint()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 6V2h8v4M4 11H3a1 1 0 01-1-1V7a1 1 0 011-1h10a1 1 0 011 1v3a1 1 0 01-1 1h-1M4 9h8v5H4V9z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          Print / PDF
+        </button>
+      </div>
+    </div>
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3 8H1.5A.5.5 0 001 8.5v5a.5.5 0 00.5.5h13a.5.5 0 00.5-.5v-5a.5.5 0 00-.5-.5H13M6 11h4M6 13h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       Export / Print
     </button>
@@ -1495,17 +1555,76 @@
 <div class="modal-overlay" id="modal" onclick="maybeClose(event)">
   <div class="modal">
     <h2>Log new issue</h2>
+
     <div class="form-group">
       <label class="form-label">Issue title</label>
-      <input class="form-input" id="f-title" type="text" placeholder="Short description of the gap or problem">
+      <input class="form-input" id="f-title" type="text" placeholder="Short description of the issue">
     </div>
-    <div class="form-group modal-admin-only">
-      <label class="form-label">SOW clause (if applicable)</label>
-      <input class="form-input" id="f-sow" type="text" placeholder="Quote or reference the relevant SOW language">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Severity</label>
+        <select class="form-select" id="f-severity">
+          <option value="">— Select —</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+          <option value="info">Info / FYI</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="f-type">
+          <option value="">— Select —</option>
+          <option value="bug">Bug</option>
+          <option value="feature">Feature request</option>
+          <option value="config">Configuration</option>
+          <option value="data">Data issue</option>
+          <option value="training">Training gap</option>
+          <option value="process">Process gap</option>
+          <option value="access">Access / permissions</option>
+          <option value="integration">Integration</option>
+          <option value="reporting">Reporting</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Module</label>
+        <select class="form-select" id="f-module">
+          <option value="">— Select —</option>
+          <option value="General Ledger">General Ledger</option>
+          <option value="Accounts Payable">Accounts Payable</option>
+          <option value="Accounts Receivable">Accounts Receivable</option>
+          <option value="Bank Reconciliation">Bank Reconciliation</option>
+          <option value="Fixed Assets">Fixed Assets</option>
+          <option value="Multi-Currency">Multi-Currency</option>
+          <option value="Purchase Orders">Purchase Orders</option>
+          <option value="Inventory Control">Inventory Control</option>
+          <option value="Sales Orders">Sales Orders (SOM)</option>
+          <option value="CRM">CRM</option>
+          <option value="Production">Production</option>
+          <option value="APS Planning">APS Planning</option>
+          <option value="Projects / WIP">Projects / WIP</option>
+          <option value="Quality">Quality</option>
+          <option value="Service Orders">Service Orders</option>
+          <option value="Factory Track">Factory Track</option>
+          <option value="ESS Portal">ESS Portal</option>
+          <option value="System / Security">System / Security</option>
+          <option value="Reporting / DataView">Reporting / DataView</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
     </div>
+
     <div class="form-group">
       <label class="form-label">Description</label>
       <textarea class="form-textarea" id="f-gap" placeholder="What is the issue or gap you've observed?"></textarea>
+    </div>
+
+    <div class="form-group modal-admin-only">
+      <label class="form-label">SOW clause (if applicable)</label>
+      <input class="form-input" id="f-sow" type="text" placeholder="Quote or reference the relevant SOW language">
     </div>
     <div class="form-group modal-admin-only">
       <label class="form-label">Evidence to gather</label>
@@ -1513,37 +1632,47 @@
     </div>
     <div class="form-group modal-admin-only">
       <label class="form-label">Raised by</label>
-      <select class="form-select" id="f-raisedby">
-        <option value="">— Unknown —</option>
-      </select>
+      <select class="form-select" id="f-raisedby"><option value="">— Unknown —</option></select>
     </div>
     <div class="form-group modal-admin-only">
       <label class="form-label">Assigned to</label>
-      <select class="form-select" id="f-assignee">
-        <option value="">— Unassigned —</option>
-      </select>
+      <select class="form-select" id="f-assignee"><option value="">— Unassigned —</option></select>
     </div>
     <div class="form-group modal-admin-only">
       <label class="form-label">Suggested action</label>
       <textarea class="form-textarea" id="f-suggestion" placeholder="What should be done to resolve this issue?"></textarea>
     </div>
-    <div class="form-group">
-      <label class="form-label">Date raised</label>
-      <input class="form-input" id="f-date" type="date">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Date raised</label>
+        <input class="form-input" id="f-date" type="date">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="f-status">
+          <option value="unknown">Unknown</option>
+          <option value="missing">Not delivered</option>
+          <option value="inprogress">In progress</option>
+          <option value="partial">Partial</option>
+          <option value="met">Met</option>
+        </select>
+      </div>
     </div>
+
     <div class="form-group">
-      <label class="form-label">Status</label>
-      <select class="form-select" id="f-status">
-        <option value="unknown">Unknown</option>
-        <option value="missing">Not delivered</option>
-        <option value="inprogress">In progress</option>
-        <option value="partial">Partial</option>
-        <option value="met">Met</option>
-      </select>
+      <label class="form-label">Attachments</label>
+      <div class="attach-drop" id="attach-drop" onclick="document.getElementById('f-files').click()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="color:var(--text-muted)"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="attach-label" style="font-size:13px;color:var(--text-muted)">Click to attach files, or drag &amp; drop</span>
+      </div>
+      <input type="file" id="f-files" multiple style="display:none" onchange="handleFileSelect(this.files)">
+      <div id="attach-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
     </div>
+
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-submit" onclick="addIssue()">Add issue</button>
+      <button class="btn-submit" id="btn-add-issue" onclick="addIssue()">Add issue</button>
     </div>
   </div>
 </div>
@@ -1855,21 +1984,37 @@ function renderList() {
     return;
   }
 
-  list.innerHTML = filtered.map((issue) => `
+  list.innerHTML = filtered.map((issue) => {
+    const sevColors = { critical:'#e05252', high:'#d4903a', medium:'#d4c050', low:'#8abf56', info:'#9ab0c8' };
+    const sevDot = issue.severity ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${sevColors[issue.severity]||'#9ab0c8'};flex-shrink:0;margin-right:2px"></span>` : '';
+    return `
     <div class="issue-card ${issue.status}" id="card-${issue.id}" onclick="toggleCard(${issue.id}, event)">
       <div class="card-header">
         <span class="issue-num">#${String(issue.id).padStart(3,'0')}</span>
         <span class="issue-title">${escHtml(issue.title)}</span>
+        ${issue.severity ? `<span class="sev-badge ${issue.severity}">${sevDot}${escHtml(issue.severity)}</span>` : ''}
+        ${issue.module ? `<span class="meta-chip" title="Module"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>${escHtml(issue.module)}</span>` : ''}
+        ${issue.issueType ? `<span class="meta-chip">${escHtml(issue.issueType)}</span>` : ''}
         ${issue.assignee ? `<span class="assignee-pill">${avatarHtml(issue.assignee)}${escHtml(issue.assignee)}</span>` : ''}
-        ${issue.raisedBy ? `<span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);white-space:nowrap;flex-shrink:0;">↑ ${escHtml(issue.raisedBy)}</span>` : ''}
         ${issue.dateRaised ? `<span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);white-space:nowrap;flex-shrink:0;">${escHtml(formatDate(issue.dateRaised))}</span>` : ''}
         <span class="badge ${issue.status}">${badgeLabel(issue.status)}</span>
         <svg class="chevron" id="chev-${issue.id}" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <div class="card-body" id="body-${issue.id}">
         ${issue.sow ? `<div class="detail-row"><div class="detail-label">SOW obligation</div><div class="sow-quote">${escHtml(issue.sow)}</div></div>` : ''}
-        ${issue.gap ? `<div class="detail-row"><div class="detail-label">Gap observed</div><div class="detail-text">${escHtml(issue.gap)}</div></div>` : ''}
+        ${issue.gap ? `<div class="detail-row"><div class="detail-label">Description</div><div class="detail-text">${escHtml(issue.gap)}</div></div>` : ''}
         ${issue.evidence ? `<div class="detail-row admin-only"><div class="detail-label">Evidence to gather</div><div class="evidence-box">${escHtml(issue.evidence)}</div></div>` : ''}
+        ${(issue.attachments && issue.attachments.length) ? `
+        <div class="detail-row">
+          <div class="detail-label">Attachments</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+            ${issue.attachments.map(a => `
+              <div class="attach-chip">
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6L9 2z" stroke="currentColor" stroke-width="1.3"/><path d="M9 2v4h4" stroke="currentColor" stroke-width="1.3"/></svg>
+                <a href="${escHtml(a.url)}" target="_blank" rel="noopener">${escHtml(a.name)}</a>
+              </div>`).join('')}
+          </div>
+        </div>` : ''}
         <div class="detail-row">
           <div class="detail-label">Suggested action</div>
           <div class="suggestion-box" id="sug-text-${issue.id}">${issue.suggestion ? escHtml(issue.suggestion) : '<span style="color:var(--text-muted);font-style:italic;">No suggestion yet — click Edit to add one.</span>'}</div>
@@ -1921,7 +2066,8 @@ function renderList() {
         </div>` : ''}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
   restoreOpenCards(open);
 }
 
@@ -2036,16 +2182,16 @@ function openModal() {
 }
 function closeModal() {
   document.getElementById('modal').classList.remove('open');
-  ['f-title','f-sow','f-gap','f-evidence'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-status').value = 'unknown';
-  document.getElementById('f-assignee').value = '';
-  document.getElementById('f-raisedby').value = '';
+  ['f-title','f-sow','f-gap','f-evidence'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  ['f-status','f-severity','f-type','f-module','f-assignee','f-raisedby'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.getElementById('f-date').value = '';
-  document.getElementById('f-suggestion').value = '';
+  const sug = document.getElementById('f-suggestion'); if(sug) sug.value = '';
+  pendingFiles = [];
+  renderAttachList();
 }
 function maybeClose(e) { if (e.target === document.getElementById('modal')) closeModal(); }
 
-function addIssue() {
+async function addIssue() {
   const title = document.getElementById('f-title').value.trim();
   if (!title) { document.getElementById('f-title').focus(); return; }
   const mode = sessionStorage.getItem('nanoone_mode');
@@ -2054,9 +2200,19 @@ function addIssue() {
     ? sessionUser
     : document.getElementById('f-raisedby').value;
   const maxId = issues.reduce((m, i) => Math.max(m, i.id), 0);
+  const newId = maxId + 1;
+
+  // Upload any pending files
+  const btn = document.getElementById('btn-add-issue');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  const attachments = await uploadPendingFiles(newId);
+
   issues.push({
-    id: maxId + 1,
+    id: newId,
     status: document.getElementById('f-status').value,
+    severity: document.getElementById('f-severity').value,
+    issueType: document.getElementById('f-type').value,
+    module: document.getElementById('f-module').value,
     assignee: mode === 'user' ? '' : document.getElementById('f-assignee').value,
     raisedBy,
     dateRaised: document.getElementById('f-date').value,
@@ -2064,14 +2220,113 @@ function addIssue() {
     title,
     sow: mode === 'user' ? '' : document.getElementById('f-sow').value.trim(),
     gap: document.getElementById('f-gap').value.trim(),
-    evidence: mode === 'user' ? '' : document.getElementById('f-evidence').value.trim()
+    evidence: mode === 'user' ? '' : document.getElementById('f-evidence').value.trim(),
+    attachments
   });
   save(issues);
+  if (btn) { btn.disabled = false; btn.textContent = 'Add issue'; }
   closeModal();
   renderStats();
   updateTabCount();
   renderAssigneeFilters();
   renderList();
+}
+
+// ── File attachments ──────────────────────────────────────
+let pendingFiles = [];
+
+function handleFileSelect(files) {
+  Array.from(files).forEach(f => {
+    if (!pendingFiles.find(p => p.name === f.name)) pendingFiles.push(f);
+  });
+  renderAttachList();
+}
+
+function renderAttachList() {
+  const el = document.getElementById('attach-list');
+  if (!el) return;
+  el.innerHTML = pendingFiles.map((f,i) => `
+    <div class="attach-chip">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6L9 2z" stroke="currentColor" stroke-width="1.3"/><path d="M9 2v4h4" stroke="currentColor" stroke-width="1.3"/></svg>
+      ${escHtml(f.name)}
+      <span class="attach-chip-remove" onclick="removePendingFile(${i})">×</span>
+    </div>`).join('');
+  const label = document.getElementById('attach-label');
+  if (label) label.textContent = pendingFiles.length ? pendingFiles.length + ' file(s) selected — click to add more' : 'Click to attach files, or drag & drop';
+}
+
+function removePendingFile(i) {
+  pendingFiles.splice(i, 1);
+  renderAttachList();
+}
+
+async function uploadPendingFiles(issueId) {
+  if (!pendingFiles.length) return [];
+  const results = [];
+  for (const file of pendingFiles) {
+    try {
+      const path = `issue-${issueId}/${Date.now()}-${file.name}`;
+      const { data, error } = await db.storage.from('attachments').upload(path, file, { upsert: true });
+      if (!error) {
+        const { data: urlData } = db.storage.from('attachments').getPublicUrl(path);
+        results.push({ name: file.name, path, url: urlData.publicUrl, size: file.size });
+      }
+    } catch(e) { console.warn('Upload failed for', file.name, e); }
+  }
+  pendingFiles = [];
+  renderAttachList();
+  return results;
+}
+
+// Drag and drop
+document.addEventListener('DOMContentLoaded', () => {
+  const drop = document.getElementById('attach-drop');
+  if (!drop) return;
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('dragover');
+    handleFileSelect(e.dataTransfer.files);
+  });
+});
+
+// ── Export functions ──────────────────────────────────────
+function toggleExportMenu(e) {
+  e.stopPropagation();
+  document.getElementById('export-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  const dd = document.getElementById('export-dropdown');
+  if (dd) dd.classList.remove('open');
+});
+
+function exportCSV() {
+  document.getElementById('export-dropdown').classList.remove('open');
+  const cols = ['id','title','status','severity','issueType','module','assignee','raisedBy','dateRaised','gap','sow','suggestion'];
+  const header = cols.join(',');
+  const rows = issues.map(i => cols.map(c => {
+    const v = i[c] || '';
+    return '"' + String(v).replace(/"/g, '""') + '"';
+  }).join(','));
+  const csv = [header, ...rows].join('\n');
+  downloadFile('nanoone-issues-' + today() + '.csv', csv, 'text/csv');
+}
+
+function exportJSON() {
+  document.getElementById('export-dropdown').classList.remove('open');
+  downloadFile('nanoone-issues-' + today() + '.json', JSON.stringify(issues, null, 2), 'application/json');
+}
+
+function today() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function downloadFile(filename, content, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type }));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 const ADMIN_HASH = 'c173a1dd28f660ba45aa227fabe8e18a50727c3ecdbd890f5ac2dd433a545916';
